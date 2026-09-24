@@ -3,7 +3,7 @@ name: Bootstrap Exponenta source
 on:
   push:
     paths:
-      - 'exponenta-source.tar.gz.b64'
+      - 'exponenta-mvp-production.zip'
 
 permissions:
   contents: write
@@ -13,11 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unpack source
+      - name: Unpack Exponenta source
         run: |
-          test -f exponenta-source.tar.gz.b64 || exit 0
-          base64 -d exponenta-source.tar.gz.b64 > /tmp/exponenta-source.tar.gz
-          tar -xzf /tmp/exponenta-source.tar.gz
+          test -f exponenta-mvp-production.zip || exit 0
+          unzip -o exponenta-mvp-production.zip
+          rm -f exponenta-mvp-production.zip
+          rm -rf chunks
           rm -f exponenta-source.tar.gz.b64
           rm -f .github/workflows/bootstrap.yml
       - name: Commit source
