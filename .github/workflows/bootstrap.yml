@@ -1,0 +1,29 @@
+name: Bootstrap Exponenta source
+
+on:
+  push:
+    paths:
+      - 'exponenta-source.tar.gz.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack source
+        run: |
+          test -f exponenta-source.tar.gz.b64 || exit 0
+          base64 -d exponenta-source.tar.gz.b64 > /tmp/exponenta-source.tar.gz
+          tar -xzf /tmp/exponenta-source.tar.gz
+          rm -f exponenta-source.tar.gz.b64
+          rm -f .github/workflows/bootstrap.yml
+      - name: Commit source
+        run: |
+          git config user.name "Exponenta Bootstrap"
+          git config user.email "admin@exponenta.mx"
+          git add -A
+          git commit -m "Import Exponenta MVP source"
+          git push
