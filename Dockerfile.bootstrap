@@ -1,0 +1,20 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /bootstrap
+COPY chunks /bootstrap/chunks
+
+RUN cat /bootstrap/chunks/part-* > /tmp/exponenta-source.tar.gz.b64 \
+    && base64 -d /tmp/exponenta-source.tar.gz.b64 > /tmp/exponenta-source.tar.gz \
+    && mkdir -p /app \
+    && tar -xzf /tmp/exponenta-source.tar.gz -C /app
+
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt \
+    && chmod +x /app/scripts/start.sh
+
+EXPOSE 8000
+CMD ["/app/scripts/start.sh"]
