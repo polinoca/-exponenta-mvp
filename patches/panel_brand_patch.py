@@ -687,5 +687,85 @@ css += r"""
 @media(max-width:820px){.xp-onboarding-v2 .xp-ss-steps{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.xp-onboarding-v2 .xp-ss-steps{grid-template-columns:1fr}.xp-onboarding-progress{align-items:flex-start}}
 """
+
+# ONBOARDING STATE V1 — derive completion from real business data, not local browser state.
+main_path = Path("/app/app/main.py")
+main_src = main_path.read_text(encoding="utf-8")
+if '"setup_steps": setup_steps' not in main_src:
+    dash_start = main_src.find('@app.get("/negocio", response_class=HTMLResponse)')
+    dash_end = main_src.find('@app.get("/negocio/configuracion"', dash_start)
+    if dash_start >= 0 and dash_end > dash_start:
+        dash = main_src[dash_start:dash_end]
+        needle = '    return render(request, "business/dashboard.html", {'
+        if needle in dash and 'staff_count = ' not in dash:
+            setup_code = '''    staff_count = db.scalar(
+        select(func.count()).select_from(User).where(
+            User.organization_id == org.id,
+            User.role == Role.BUSINESS_STAFF,
+            User.active.is_(True),
+        )
+    ) or 0
+    review_connected = db.scalar(
+        select(func.count()).select_from(RedirectCode).where(
+            RedirectCode.organization_id == org.id,
+            RedirectCode.destination_type == DestinationType.GOOGLE_REVIEW,
+            RedirectCode.active.is_(True),
+        )
+    ) or 0
+    brand_done = bool(org.logo_url)
+    reward_done = bool(program and program.reward_name and program.reward_name.strip() and program.reward_name.strip().lower() != "recompensa")
+    contact_done = bool(program and program.primary_cta_url and program.primary_cta_url.strip() not in {"", "https://wa.me/", "https://wa.me"})
+    setup_steps = {
+        "brand": brand_done,
+        "reward": reward_done,
+        "contact": bool(contact_done or review_connected),
+        "team": staff_count > 0,
+        "customer": customers > 0,
+        "visit": visits > 0,
+    }
+    setup_completed = sum(1 for done in setup_steps.values() if done)
+'''
+            dash = dash.replace(needle, setup_code + needle, 1)
+            dash = dash.replace('        "program": program,\n', '        "program": program,\n        "staff_count": staff_count,\n        "review_connected": bool(review_connected),\n        "setup_steps": setup_steps,\n        "setup_completed": setup_completed,\n', 1)
+            main_src = main_src[:dash_start] + dash + main_src[dash_end:]
+            main_path.write_text(main_src, encoding="utf-8")
+
+# Make onboarding checklist reflect actual completion automatically.
+if dashboard_path.exists():
+    t = dashboard_path.read_text(encoding="utf-8")
+    start = t.find('<section class="xp-selfservice-start xp-onboarding-v2">')
+    if start >= 0:
+        end = t.find("</section>", start)
+        if end >= 0:
+            end += len("</section>")
+            dynamic_onboarding = r"""
+<section class="xp-selfservice-start xp-onboarding-v2">
+  <div class="xp-ss-head">
+    <div><span class="xp-ss-kicker">PON TU CLUB EN MARCHA</span><h2>{% if setup_completed == 6 %}✓ Tu negocio está listo para operar.{% else %}Te faltan {{ 6 - setup_completed }} pasos para quedar listo.{% endif %}</h2></div>
+    <span class="xp-ss-badge">{{ setup_completed }} de 6 listos</span>
+  </div>
+  <div class="xp-onboarding-meter" aria-label="{{ setup_completed }} de 6 pasos completos"><i style="width:{{ (setup_completed / 6 * 100)|round|int }}%"></i></div>
+  <div class="xp-ss-steps xp-onboarding-steps">
+    <a class="{% if setup_steps.brand %}done{% endif %}" href="/negocio/configuracion"><b>{% if setup_steps.brand %}✓{% else %}1{% endif %}</b><span><strong>Tu marca</strong><small>{% if setup_steps.brand %}Logo configurado.{% else %}Agrega tu logo y color.{% endif %}</small></span><i>→</i></a>
+    <a class="{% if setup_steps.reward %}done{% endif %}" href="/negocio/lealtad"><b>{% if setup_steps.reward %}✓{% else %}2{% endif %}</b><span><strong>Tu recompensa</strong><small>{% if setup_steps.reward %}Recompensa configurada.{% else %}Define visitas y beneficio.{% endif %}</small></span><i>→</i></a>
+    <a class="{% if setup_steps.contact %}done{% endif %}" href="/negocio/marketing"><b>{% if setup_steps.contact %}✓{% else %}3{% endif %}</b><span><strong>Google y contacto</strong><small>{% if setup_steps.contact %}Canal conectado.{% else %}Conecta reseñas o tu contacto.{% endif %}</small></span><i>→</i></a>
+    <a class="{% if setup_steps.team %}done{% endif %}" href="/negocio/seguridad"><b>{% if setup_steps.team %}✓{% else %}4{% endif %}</b><span><strong>Tu equipo</strong><small>{% if setup_steps.team %}Equipo agregado.{% else %}Agrega a quien registrará visitas.{% endif %}</small></span><i>→</i></a>
+    <a class="{% if setup_steps.customer %}done{% endif %}" href="/club/{{ organization.slug }}" target="_blank" rel="noopener"><b>{% if setup_steps.customer %}✓{% else %}5{% endif %}</b><span><strong>Prueba como cliente</strong><small>{% if setup_steps.customer %}Ya existe una tarjeta.{% else %}Crea una tarjeta de prueba.{% endif %}</small></span><i>↗</i></a>
+    <a class="{% if setup_steps.visit %}done{% endif %}" href="/operar"><b>{% if setup_steps.visit %}✓{% else %}6{% endif %}</b><span><strong>Visita de prueba</strong><small>{% if setup_steps.visit %}Registro comprobado.{% else %}Registra la primera visita.{% endif %}</small></span><i>→</i></a>
+  </div>
+  {% if setup_completed == 6 %}
+  <div class="xp-ready-box xp-ready-complete"><span>CONFIGURACIÓN COMPLETA</span><strong>✓ Tu negocio está listo para recibir clientes.</strong><small>Desde ahora puedes concentrarte en registrar visitas, entregar recompensas y revisar resultados.</small></div>
+  {% else %}
+  <div class="xp-ready-box"><span>SIGUIENTE OBJETIVO</span><strong>Completa los pasos pendientes.</strong><small>Exponenta marcará cada uno automáticamente cuando detecte que ya quedó configurado.</small></div>
+  {% endif %}
+</section>
+"""
+            t = t[:start] + dynamic_onboarding + t[end:]
+    dashboard_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* ONBOARDING STATE V1 */
+.xp-onboarding-meter{height:7px;margin:13px 0 15px;border-radius:999px;background:#eadfd5;overflow:hidden}.xp-onboarding-meter i{display:block;height:100%;border-radius:inherit;background:#8a4d2b;transition:width .3s ease}.xp-onboarding-steps>a.done{background:#f3eee8!important;border-color:#d8c6b7!important}.xp-onboarding-steps>a.done>b{background:#6b3b22!important;color:#fff!important}.xp-onboarding-steps>a.done strong{color:#57321f}.xp-ready-complete{background:#57351f!important}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
