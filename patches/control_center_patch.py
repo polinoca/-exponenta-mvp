@@ -243,7 +243,7 @@ if plan.exists():
 s=p.read_text()
 old='"billing_ready":settings.stripe_billing_ready})'
 if old in s and '"feature_catalog":FEATURE_CATALOG' not in s[s.find('def business_plan'):s.find('def business_plan')+1000]:
- s=s.replace(old,'billing_ready":settings.stripe_billing_ready,"feature_catalog":FEATURE_CATALOG,"feature_states":feature_states(db,org.id)})',1)
+ s=s.replace(old,'"billing_ready":settings.stripe_billing_ready,"feature_catalog":FEATURE_CATALOG,"feature_states":feature_states(db,org.id)})',1)
  p.write_text(s)
 
 # Add Superadmin control link without depending on exact admin layout.
