@@ -432,5 +432,92 @@ css += r"""
 .xp-module-guide{width:min(1180px,calc(100% - 28px));margin:12px auto 18px!important;padding:18px 20px!important;background:#fff!important;border:1px solid #e1dad1!important;border-radius:20px!important}.xp-module-guide h2{font-size:1.35rem!important;margin:5px 0 6px!important}.xp-module-guide p{font-size:.75rem!important;line-height:1.5;margin:0!important;max-width:720px}.xp-module-hints{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.xp-module-hints span{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border-radius:999px;background:#f3ece5;font-size:.64rem;color:#5e534b}.xp-module-hints b{width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:#fff;color:#7c4829;font-size:.6rem}
 @media(max-width:720px){.xp-module-guide{width:calc(100% - 24px);padding:16px!important}.xp-module-guide h2{font-size:1.2rem!important}.xp-module-hints{display:grid}.xp-module-hints span{border-radius:12px}}
 """
+
+# CLIENT COUNTER V1 — turn the loyalty member list into a simple point-of-sale style workflow.
+loyalty_path = templates_dir / "loyalty.html"
+if loyalty_path.exists():
+    t = loyalty_path.read_text(encoding="utf-8")
+    # Human labels only; routes and permissions remain unchanged.
+    label_swaps = {
+        ">Sumar sello<": ">+ Registrar visita<",
+        ">Agregar sello<": ">+ Registrar visita<",
+        ">Dar sello<": ">+ Registrar visita<",
+        ">Canjear<": ">Entregar recompensa<",
+        ">Canjear recompensa<": ">Entregar recompensa<",
+    }
+    for old, new in label_swaps.items():
+        t = t.replace(old, new)
+    if "xp-client-counter" not in t:
+        counter = r"""
+<section class="xp-client-counter">
+  <div class="xp-counter-head">
+    <div><span class="xp-ss-kicker">ATENCIÓN RÁPIDA</span><h2>Encuentra al cliente.</h2><p>Escribe su nombre, teléfono o correo. Después registra su visita o entrega una recompensa.</p></div>
+  </div>
+  <label class="xp-client-search">
+    <span>Buscar cliente</span>
+    <input id="xp-client-search" type="search" inputmode="search" autocomplete="off" placeholder="Nombre, teléfono o correo…" aria-label="Buscar cliente">
+  </label>
+  <div id="xp-client-empty" class="xp-client-empty" hidden>No encontramos ese cliente. Revisa el nombre o teléfono.</div>
+</section>
+"""
+        guide_pos = t.find('<section class="xp-module-guide">')
+        if guide_pos >= 0:
+            guide_end = t.find("</section>", guide_pos)
+            if guide_end >= 0:
+                guide_end += len("</section>")
+                t = t[:guide_end] + counter + t[guide_end:]
+        else:
+            nav_end = t.find("</nav>")
+            if nav_end >= 0:
+                nav_end += len("</nav>")
+                t = t[:nav_end] + counter + t[nav_end:]
+    if "xp-client-counter-script" not in t:
+        script = r"""
+<script id="xp-client-counter-script">
+(() => {
+  const input = document.getElementById('xp-client-search');
+  if (!input) return;
+  const tables = [...document.querySelectorAll('table')];
+  const table = tables.find(x => /cliente|whatsapp|correo|recompensa|visita/i.test(x.innerText)) || tables[0];
+  if (!table) return;
+  table.classList.add('xp-client-table');
+  const rows = [...table.querySelectorAll('tbody tr')];
+  const empty = document.getElementById('xp-client-empty');
+
+  // Mark the two everyday actions without changing any form behavior.
+  rows.forEach(row => {
+    [...row.querySelectorAll('button, input[type="submit"], a.btn, a.button')].forEach(action => {
+      const text = (action.textContent || action.value || '').trim();
+      if (/sello|registrar visita|agregar visita/i.test(text)) action.classList.add('xp-visit-action');
+      if (/canjear|entregar recompensa/i.test(text)) action.classList.add('xp-reward-action');
+    });
+  });
+
+  const filter = () => {
+    const q = input.value.trim().toLocaleLowerCase('es');
+    let visible = 0;
+    rows.forEach(row => {
+      const show = !q || row.innerText.toLocaleLowerCase('es').includes(q);
+      row.hidden = !show;
+      if (show) visible++;
+    });
+    if (empty) empty.hidden = visible !== 0;
+  };
+  input.addEventListener('input', filter);
+})();
+</script>
+"""
+        endblock = "{% endblock %}"
+        if endblock in t:
+            t = t.replace(endblock, script + "\n" + endblock, 1)
+        else:
+            t += script
+    loyalty_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* CLIENT COUNTER V1 */
+.xp-client-counter{width:min(1180px,calc(100% - 28px));margin:10px auto 18px!important;padding:20px!important;background:#201914!important;color:#fff;border:0!important;border-radius:22px!important}.xp-counter-head h2{color:#fff!important;font-size:1.55rem!important;margin:5px 0 5px!important}.xp-counter-head p{color:#cfc2b8!important;font-size:.72rem!important;margin:0 0 15px!important}.xp-client-search{display:grid;gap:6px;color:#fff!important}.xp-client-search>span{font-size:.66rem;font-weight:850}.xp-client-search input{background:#fff!important;color:#17130f!important;border:0!important;min-height:52px!important;border-radius:15px!important;font-size:1rem!important;padding:0 15px!important}.xp-client-empty{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.1);font-size:.7rem}.xp-client-table .xp-visit-action{background:#201914!important;color:#fff!important;border-color:#201914!important}.xp-client-table .xp-reward-action{background:#f1e4d9!important;color:#704126!important;border-color:#e3cdbb!important}.xp-client-table tr:not([hidden]){transition:background .15s ease}.xp-client-table tr:hover td{background:#fffaf6}
+@media(max-width:720px){.xp-client-counter{width:calc(100% - 24px);padding:17px!important}.xp-client-table{white-space:normal!important}.xp-client-table td{min-width:125px}.xp-client-table button,.xp-client-table .btn,.xp-client-table input[type=submit]{width:100%;white-space:nowrap;margin:3px 0}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
