@@ -190,5 +190,81 @@ css += r"""
   .business-shell .site-header .brand{font-size:1.35rem;line-height:1.1}
 }
 """
+
+# SELF-SERVICE V1 — make the business panel understandable without training.
+dashboard_path = templates_dir / "dashboard.html"
+if dashboard_path.exists():
+    t = dashboard_path.read_text(encoding="utf-8")
+    if "xp-selfservice-start" not in t:
+        nav_end = "</nav>"
+        guide = r"""
+<section class="xp-selfservice-start">
+  <div class="xp-ss-head">
+    <div><span class="xp-ss-kicker">PRIMEROS PASOS</span><h2>Deja tu programa listo en minutos.</h2></div>
+    <span class="xp-ss-badge">Sin conocimientos técnicos</span>
+  </div>
+  <div class="xp-ss-steps">
+    <a href="/negocio/configuracion"><b>1</b><span><strong>Personaliza tu negocio</strong><small>Nombre, color, logo y contacto.</small></span><i>→</i></a>
+    <a href="/negocio/lealtad"><b>2</b><span><strong>Define tu recompensa</strong><small>Ejemplo: 9 visitas = 1 café gratis.</small></span><i>→</i></a>
+    <a href="/negocio/seguridad"><b>3</b><span><strong>Agrega a tu equipo</strong><small>Ellos podrán registrar visitas.</small></span><i>→</i></a>
+    <a href="/negocio/lealtad"><b>4</b><span><strong>Prueba como cliente</strong><small>Registra una visita y revisa la experiencia.</small></span><i>→</i></a>
+  </div>
+  <p class="xp-ss-note">Exponenta configura la parte técnica por detrás. Tú sólo decides cómo quieres atender y premiar a tus clientes.</p>
+</section>
+"""
+        idx = t.find(nav_end)
+        if idx >= 0:
+            idx += len(nav_end)
+            t = t[:idx] + guide + t[idx:]
+    dashboard_path.write_text(t, encoding="utf-8")
+
+# Add a simple live Wallet-brand preview to Settings using fields already used by Google Wallet.
+settings_path = templates_dir / "settings.html"
+if settings_path.exists():
+    t = settings_path.read_text(encoding="utf-8")
+    if "xp-wallet-branding" not in t:
+        wallet_branding = r"""
+<section class="xp-wallet-branding">
+  <div class="xp-wallet-copy">
+    <span class="xp-ss-kicker">TU TARJETA DIGITAL</span>
+    <h2>Haz que se sienta como tu negocio.</h2>
+    <p>Con tu logo y un color principal ya puedes tener una tarjeta reconocible. No necesitas diseñar nada.</p>
+    <div class="xp-wallet-levels">
+      <div class="active"><b>Simple</b><span>Logo + color de marca. Recomendado para empezar.</span></div>
+      <div><b>Personalizado</b><span>Imagen de portada y arte especial. Lo habilitaremos como opción avanzada.</span></div>
+    </div>
+    <p class="xp-wallet-help">Consejo: usa un color oscuro o medio para que el texto se lea bien. Puedes cambiarlo después.</p>
+  </div>
+  <div class="xp-wallet-preview" style="--wallet-brand: {{ organization.brand_color or '#6b3b22' }}">
+    <div class="xp-wallet-preview-top">
+      {% if organization.logo_url %}<img src="{{ organization.logo_url }}" alt="Logo de {{ organization.name }}">{% else %}<span class="xp-wallet-logo-placeholder">{{ organization.name[:1] }}</span>{% endif %}
+      <small>MI CLUB</small>
+    </div>
+    <h3>{{ organization.name }}</h3>
+    <div class="xp-wallet-preview-progress"><strong>6</strong><span>de 9 visitas</span></div>
+    <div class="xp-wallet-preview-dots">{% for i in range(9) %}<i class="{% if i < 6 %}on{% endif %}"></i>{% endfor %}</div>
+    <div class="xp-wallet-preview-reward"><small>PRÓXIMA RECOMPENSA</small><b>Tu beneficio</b></div>
+    <span class="xp-wallet-preview-label">Vista previa</span>
+  </div>
+</section>
+"""
+        idx = t.find("</header>")
+        if idx >= 0:
+            idx += len("</header>")
+            t = t[:idx] + wallet_branding + t[idx:]
+        else:
+            block = "{% block body %}"
+            t = t.replace(block, block + "\n" + wallet_branding, 1)
+    settings_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* SELF-SERVICE V1 */
+.xp-selfservice-start{width:min(1180px,calc(100% - 28px));margin:18px auto 26px!important;padding:22px!important;background:#fff!important;border:1px solid var(--xp-line)!important;border-radius:24px!important;box-shadow:0 12px 34px rgba(55,40,28,.05)}
+.xp-ss-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start}.xp-ss-kicker{font-size:.58rem;letter-spacing:.16em;font-weight:950;color:#9a6746}.xp-ss-head h2,.xp-wallet-copy h2{font-size:1.65rem!important;margin:6px 0 0!important;letter-spacing:-.04em}.xp-ss-badge{background:#f2e8df;border-radius:999px;padding:7px 10px;font-size:.62rem;font-weight:850;color:#754426;white-space:nowrap}.xp-ss-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:20px}.xp-ss-steps a{min-width:0;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:9px;padding:13px;border:1px solid #e3dcd3;border-radius:16px;background:#fff;color:#29231e!important;text-decoration:none!important}.xp-ss-steps a:hover{border-color:#b8784d;background:#fffaf6}.xp-ss-steps a>b{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#efe1d6;color:#784425;font-size:.7rem}.xp-ss-steps a span{display:grid;min-width:0}.xp-ss-steps strong{font-size:.76rem}.xp-ss-steps small{font-size:.64rem;line-height:1.35;margin-top:3px}.xp-ss-steps i{font-style:normal;color:#a15e35}.xp-ss-note{font-size:.72rem!important;margin:14px 0 0!important;color:#81776f!important}
+.xp-wallet-branding{display:grid;gap:24px;width:min(1180px,calc(100% - 28px));margin:18px auto 28px!important;padding:24px!important;background:#efe5dc!important;border:0!important;border-radius:26px!important;align-items:center}.xp-wallet-copy>p{line-height:1.55;max-width:560px}.xp-wallet-levels{display:grid;gap:8px;margin:18px 0}.xp-wallet-levels>div{display:grid;gap:2px;padding:12px 14px;border:1px solid #d9cfc5;border-radius:14px;background:rgba(255,255,255,.55)}.xp-wallet-levels>div.active{border-color:#a8643a;background:#fff}.xp-wallet-levels b{font-size:.75rem}.xp-wallet-levels span{font-size:.66rem;color:#756c64}.xp-wallet-help{font-size:.68rem!important}.xp-wallet-preview{--wallet-brand:#6b3b22;width:min(100%,320px);min-height:390px;justify-self:center;background:linear-gradient(145deg,var(--wallet-brand),color-mix(in srgb,var(--wallet-brand),#fff 24%));color:#fff;border-radius:27px;padding:21px;box-shadow:0 25px 60px rgba(63,39,25,.22);display:flex;flex-direction:column}.xp-wallet-preview-top{display:flex;align-items:center;justify-content:space-between}.xp-wallet-preview-top img{max-width:100px;max-height:42px;object-fit:contain}.xp-wallet-preview-top small{font-size:.55rem;letter-spacing:.12em}.xp-wallet-logo-placeholder{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.92);color:var(--wallet-brand);display:grid;place-items:center;font-weight:950}.xp-wallet-preview h3{color:#fff!important;font-size:1.5rem!important;margin:30px 0 20px!important}.xp-wallet-preview-progress{display:flex;align-items:baseline;gap:7px}.xp-wallet-preview-progress strong{font-size:2.8rem}.xp-wallet-preview-progress span{font-size:.7rem;opacity:.8}.xp-wallet-preview-dots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:15px 0}.xp-wallet-preview-dots i{aspect-ratio:1;border:1.5px solid rgba(255,255,255,.55);border-radius:50%}.xp-wallet-preview-dots i.on{background:#fff}.xp-wallet-preview-reward{margin-top:auto;background:rgba(30,15,8,.2);border-radius:13px;padding:12px;display:grid;gap:3px}.xp-wallet-preview-reward small{font-size:.52rem;letter-spacing:.09em;color:#f3e5dc}.xp-wallet-preview-reward b{font-size:.75rem}.xp-wallet-preview-label{text-align:center;font-size:.56rem;opacity:.65;margin-top:12px}
+@media(max-width:820px){.xp-ss-steps{grid-template-columns:1fr 1fr}.xp-wallet-branding{width:calc(100% - 24px)}}
+@media(max-width:520px){.xp-selfservice-start{width:calc(100% - 24px);padding:17px!important}.xp-ss-head{display:grid}.xp-ss-badge{justify-self:start}.xp-ss-steps{grid-template-columns:1fr}.xp-wallet-branding{padding:18px!important}.xp-wallet-preview{width:min(100%,285px);min-height:350px}}
+@media(min-width:760px){.xp-wallet-branding{grid-template-columns:1fr .8fr;padding:34px!important}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
