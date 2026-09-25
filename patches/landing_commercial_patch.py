@@ -3,7 +3,7 @@ import base64
 
 # Brand asset: exact supplied Exponenta artwork, background removed without changing the brown/copper tones.
 logo_b64 = Path("/bootstrap/patches/exponenta_logo.b64").read_text(encoding="utf-8").strip()
-Path("/app/app/static/exponenta-logo.webp?v=20260925-4").write_bytes(base64.b64decode(logo_b64))
+Path("/app/app/static/exponenta-logo.webp").write_bytes(base64.b64decode(logo_b64))
 
 base = Path("/app/app/templates/base.html")
 base.write_text("""<!doctype html>
