@@ -1,11 +1,4 @@
-from pathlib import Path
-import base64
-
-# Brand asset: exact supplied Exponenta artwork, background removed without changing the brown/copper tones.
-logo_b64 = Path("/bootstrap/patches/exponenta_logo.b64").read_text(encoding="utf-8").strip()
-Path("/app/app/static/exponenta-logo.svg?v=20260925-6").write_bytes(base64.b64decode(logo_b64))
-
-base = Path("/app/app/templates/base.html")
+from pathlib import Path\n\n# Brand asset: valid transparent vector from the approved Exponenta artwork.\nlogo_svg = Path("/bootstrap/patches/exponenta-logo.svg").read_text(encoding="utf-8")\nPath("/app/app/static/exponenta-logo.svg").write_text(logo_svg, encoding="utf-8")\n\nbase = Path("/app/app/templates/base.html")
 base.write_text("""<!doctype html>
 <html lang="es">
 <head>
