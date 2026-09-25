@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /bootstrap
 COPY zipchunks /bootstrap/zipchunks
+COPY patches /bootstrap/patches
 
 RUN cat /bootstrap/zipchunks/z00 \
         /bootstrap/zipchunks/z01 \
@@ -34,6 +35,8 @@ with zipfile.ZipFile(p) as z:
         raise SystemExit(f"Corrupt ZIP member: {bad}")
     z.extractall("/app")
 PY
+
+RUN python /bootstrap/patches/production_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
