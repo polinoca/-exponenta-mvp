@@ -3,7 +3,7 @@ import base64
 
 # Brand asset: exact supplied Exponenta artwork, background removed without changing the brown/copper tones.
 logo_b64 = Path("/bootstrap/patches/exponenta_logo.b64").read_text(encoding="utf-8").strip()
-Path("/app/app/static/exponenta-logo.webp").write_bytes(base64.b64decode(logo_b64))
+Path("/app/app/static/exponenta-logo.webp?v=20260925-4").write_bytes(base64.b64decode(logo_b64))
 
 base = Path("/app/app/templates/base.html")
 base.write_text("""<!doctype html>
@@ -29,7 +29,7 @@ landing = r"""{% extends "base.html" %}
 <div class="xp-page">
   <header class="xp-nav">
     <div class="xp-wrap xp-nav-inner">
-      <a class="xp-logo" href="/" aria-label="Exponenta"><img src="/static/exponenta-logo.webp" alt="Exponenta"></a>
+      <a class="xp-logo" href="/" aria-label="Exponenta"><img src="/static/exponenta-logo.webp?v=20260925-4" alt="Exponenta"></a>
       <nav class="xp-nav-links" aria-label="Navegación">
         <a href="#ventajas">Ventajas</a>
         <a href="#como">Cómo funciona</a>
@@ -186,7 +186,7 @@ landing = r"""{% extends "base.html" %}
 
     <section class="xp-final">
       <div class="xp-wrap xp-final-inner">
-        <img src="/static/exponenta-logo.webp" alt="Exponenta">
+        <img src="/static/exponenta-logo.webp?v=20260925-4" alt="Exponenta">
         <div>
           <span class="xp-kicker">EXPONENTA</span>
           <h2>Tu cliente ya tiene un celular. Haz que tu negocio viva ahí.</h2>
@@ -198,7 +198,7 @@ landing = r"""{% extends "base.html" %}
   </main>
 
   <footer class="xp-footer xp-wrap">
-    <img src="/static/exponenta-logo.webp" alt="Exponenta">
+    <img src="/static/exponenta-logo.webp?v=20260925-4" alt="Exponenta">
     <span>Exponenta · Tecnología para negocios que quieren clientes recurrentes.</span>
   </footer>
 </div>
