@@ -8,7 +8,7 @@ new = '''<body class="{% if request.url.path == '/' %}xp-public{% elif request.u
   <header class="xp-app-topbar">
     <div class="xp-app-topbar-inner">
       <a class="xp-app-brand" href="/panel" aria-label="Exponenta panel">
-        <img src="/static/exponenta-logo.webp?v=20260925-5" alt="Exponenta">
+        <img src="/static/exponenta-logo.svg?v=20260925-6" alt="Exponenta">
       </a>
       <div class="xp-app-context">
         <span>{% if request.url.path.startswith('/admin') %}Administración{% elif request.url.path.startswith('/operar') %}Operación{% else %}Panel de negocio{% endif %}</span>
