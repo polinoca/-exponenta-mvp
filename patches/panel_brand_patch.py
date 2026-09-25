@@ -266,5 +266,76 @@ css += r"""
 @media(max-width:520px){.xp-selfservice-start{width:calc(100% - 24px);padding:17px!important}.xp-ss-head{display:grid}.xp-ss-badge{justify-self:start}.xp-ss-steps{grid-template-columns:1fr}.xp-wallet-branding{padding:18px!important}.xp-wallet-preview{width:min(100%,285px);min-height:350px}}
 @media(min-width:760px){.xp-wallet-branding{grid-template-columns:1fr .8fr;padding:34px!important}}
 """
+
+# SELF-SERVICE V1.1 — remove internal MVP language and make Wallet preview respond instantly.
+for tpl in business_templates:
+    if tpl.exists():
+        t = tpl.read_text(encoding="utf-8")
+        t = t.replace(" · MVP", "").replace("MVP · ", "")
+        tpl.write_text(t, encoding="utf-8")
+
+if settings_path.exists():
+    t = settings_path.read_text(encoding="utf-8")
+    if "xp-wallet-live-script" not in t:
+        live_script = r"""
+<script id="xp-wallet-live-script">
+(() => {
+  const color = document.querySelector('input[name="brand_color"]');
+  const logo = document.querySelector('input[name="logo_url"]');
+  const preview = document.querySelector('.xp-wallet-preview');
+  const logoSlot = document.querySelector('.xp-wallet-preview-top img, .xp-wallet-logo-placeholder');
+  if (!preview) return;
+
+  if (color) {
+    const box = document.createElement('div');
+    box.className = 'xp-color-helper';
+    box.innerHTML = '<small>Elige un color parecido al de tu negocio</small><div class="xp-color-presets"></div>';
+    const presets = [
+      ['Café','#6b3b22'],['Negro','#171310'],['Azul','#315187'],['Verde','#315b49'],['Vino','#713b43']
+    ];
+    const row = box.querySelector('.xp-color-presets');
+    presets.forEach(([name,value]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'xp-color-dot'; b.title = name;
+      b.style.background = value; b.setAttribute('aria-label', name);
+      b.addEventListener('click', () => { color.value = value; color.dispatchEvent(new Event('input',{bubbles:true})); });
+      row.appendChild(b);
+    });
+    color.insertAdjacentElement('afterend', box);
+    const syncColor = () => preview.style.setProperty('--wallet-brand', color.value || '#6b3b22');
+    color.addEventListener('input', syncColor); syncColor();
+  }
+
+  if (logo) {
+    const help = document.createElement('small');
+    help.className = 'xp-field-human-help';
+    help.textContent = 'Tu logo aparecerá en la tarjeta. Si todavía no lo tienes listo, puedes continuar y agregarlo después.';
+    logo.insertAdjacentElement('afterend', help);
+    const syncLogo = () => {
+      const value = logo.value.trim();
+      const current = document.querySelector('.xp-wallet-preview-top img');
+      if (value) {
+        if (current) current.src = value;
+        else if (logoSlot) {
+          const img = document.createElement('img'); img.src = value; img.alt = 'Logo del negocio'; logoSlot.replaceWith(img);
+        }
+      }
+    };
+    logo.addEventListener('change', syncLogo);
+  }
+})();
+</script>
+"""
+        endblock = "{% endblock %}"
+        if endblock in t:
+            t = t.replace(endblock, live_script + "\n" + endblock, 1)
+        else:
+            t += live_script
+    settings_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* SELF-SERVICE V1.1 */
+.xp-color-helper{display:grid;gap:7px;margin:8px 0 4px}.xp-color-helper>small,.xp-field-human-help{display:block;font-size:.64rem!important;color:#7c736b!important;line-height:1.4}.xp-color-presets{display:flex;gap:8px;align-items:center}.xp-color-dot{width:31px!important;height:31px!important;min-height:31px!important;padding:0!important;border:3px solid #fff!important;border-radius:50%!important;box-shadow:0 0 0 1px #d5ccc3!important}.xp-color-dot:focus{outline:2px solid #a96131;outline-offset:2px}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
