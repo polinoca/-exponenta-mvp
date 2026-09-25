@@ -634,5 +634,58 @@ css += r"""
 .xp-customer{margin:0;background:#f6f3ee;color:#181410;min-height:100vh}.xp-customer main,.xp-customer .container,.xp-customer .page,.xp-customer .content{width:min(620px,calc(100% - 24px));margin-left:auto;margin-right:auto}.xp-customer button,.xp-customer .btn,.xp-customer .button,.xp-customer input[type=submit]{min-height:50px;border-radius:999px!important;font-weight:850}.xp-customer input,.xp-customer select,.xp-customer textarea{min-height:50px;border:1px solid #d9d1c8!important;border-radius:14px!important;background:#fff!important;padding:12px 14px!important}.xp-customer-join-intro,.xp-customer-ready{width:min(620px,calc(100% - 24px));margin:18px auto 14px;padding:18px 19px;border-radius:20px;background:#fff;border:1px solid #e2dbd2}.xp-customer-join-intro>span,.xp-customer-ready>span{font-size:.58rem;letter-spacing:.13em;font-weight:950;color:#8d5532}.xp-customer-join-intro h2{font-size:1.55rem;line-height:1.02;letter-spacing:-.04em;margin:7px 0}.xp-customer-join-intro p,.xp-customer-ready p{font-size:.73rem;line-height:1.5;color:#756c64;margin:6px 0 0}.xp-customer-ready{background:#efe5dc;border-color:#ddcdbf}.xp-customer-ready>span{color:#6f4025}.xp-customer a{color:#6d3d1f}.xp-customer table{width:100%}
 @media(max-width:520px){.xp-customer-join-intro,.xp-customer-ready{padding:16px}.xp-customer-join-intro h2{font-size:1.4rem}}
 """
+
+# ONBOARDING V2 — one visible path from account creation to ready-to-operate.
+if dashboard_path.exists():
+    t = dashboard_path.read_text(encoding="utf-8")
+    old_start = '<section class="xp-selfservice-start">'
+    start = t.find(old_start)
+    if start >= 0:
+        end = t.find("</section>", start)
+        if end >= 0:
+            end += len("</section>")
+            onboarding = r"""
+<section class="xp-selfservice-start xp-onboarding-v2">
+  <div class="xp-ss-head">
+    <div><span class="xp-ss-kicker">PON TU CLUB EN MARCHA</span><h2>Configúralo una vez. Después sólo atiende clientes.</h2></div>
+    <span class="xp-ss-badge">Guía paso a paso</span>
+  </div>
+  <div class="xp-onboarding-progress"><i></i><span>Empieza por tu marca y avanza en orden. Puedes volver cuando quieras.</span></div>
+  <div class="xp-ss-steps xp-onboarding-steps">
+    <a href="/negocio/configuracion"><b>1</b><span><strong>Tu marca</strong><small>Logo, color y datos básicos.</small></span><i>→</i></a>
+    <a href="/negocio/lealtad"><b>2</b><span><strong>Tu recompensa</strong><small>Elige cuántas visitas y qué vas a regalar.</small></span><i>→</i></a>
+    <a href="/negocio/marketing"><b>3</b><span><strong>Google y contacto</strong><small>Conecta reseñas y la forma de volver a contactarte.</small></span><i>→</i></a>
+    <a href="/negocio/seguridad"><b>4</b><span><strong>Tu equipo</strong><small>Agrega a quien registrará visitas.</small></span><i>→</i></a>
+    <a href="/club/{{ organization.slug }}" target="_blank" rel="noopener"><b>5</b><span><strong>Prueba como cliente</strong><small>Abre el alta y crea una tarjeta de prueba.</small></span><i>↗</i></a>
+    <a href="/operar"><b>6</b><span><strong>Haz una visita de prueba</strong><small>Comprueba el flujo antes de usarlo con clientes.</small></span><i>→</i></a>
+  </div>
+  <div class="xp-ready-box"><span>Cuando completes estos pasos:</span><strong>Tu negocio queda listo para operar.</strong><small>QR, seguridad, registro y parte técnica quedan funcionando detrás de Exponenta.</small></div>
+</section>
+"""
+            t = t[:start] + onboarding + t[end:]
+    dashboard_path.write_text(t, encoding="utf-8")
+
+# Settings should tell the owner exactly what is essential versus optional.
+if settings_path.exists():
+    t = settings_path.read_text(encoding="utf-8")
+    if "xp-essential-note" not in t:
+        note = r"""
+<div class="xp-essential-note">
+  <b>Para empezar sólo necesitas 2 cosas:</b>
+  <span>tu logo y un color parecido al de tu negocio. Todo lo demás puede ajustarse después.</span>
+</div>
+"""
+        pos = t.find('<section class="xp-wallet-branding">')
+        if pos >= 0:
+            insert = t.find(">", pos) + 1
+            t = t[:insert] + note + t[insert:]
+    settings_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* ONBOARDING V2 */
+.xp-onboarding-v2 .xp-ss-steps{grid-template-columns:repeat(3,1fr)}.xp-onboarding-progress{display:flex;align-items:center;gap:9px;margin-top:16px;padding:10px 12px;border-radius:13px;background:#f7f1eb}.xp-onboarding-progress i{width:9px;height:9px;border-radius:50%;background:#a96131;box-shadow:0 0 0 4px #ead8ca}.xp-onboarding-progress span{font-size:.66rem;color:#6e6259}.xp-ready-box{display:grid;gap:3px;margin-top:14px;padding:13px 14px;border-radius:15px;background:#201914;color:#fff}.xp-ready-box span{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#cdbfb5}.xp-ready-box strong{font-size:.82rem}.xp-ready-box small{font-size:.63rem;color:#cfc2b8}.xp-essential-note{grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;padding:11px 13px;border-radius:13px;background:#fff;border:1px solid #dacbbf;margin-bottom:4px}.xp-essential-note b{font-size:.7rem;color:#6f4025}.xp-essential-note span{font-size:.68rem;color:#756b63}
+@media(max-width:820px){.xp-onboarding-v2 .xp-ss-steps{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.xp-onboarding-v2 .xp-ss-steps{grid-template-columns:1fr}.xp-onboarding-progress{align-items:flex-start}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
