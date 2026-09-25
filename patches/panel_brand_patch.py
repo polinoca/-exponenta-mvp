@@ -574,5 +574,65 @@ css += r"""
 .xp-operator-simple{width:min(720px,calc(100% - 24px));margin:16px auto 18px!important;padding:20px!important;border:0!important;border-radius:22px!important;background:#201914!important;color:#fff!important}.xp-operator-simple h1{color:#fff!important;font-size:clamp(1.8rem,8vw,2.6rem)!important;margin:6px 0 8px!important}.xp-operator-simple p{color:#d3c7be!important;font-size:.76rem!important;line-height:1.5}.xp-operator-rule{display:flex;gap:8px;align-items:flex-start;margin-top:15px;padding:11px 12px;border-radius:13px;background:rgba(255,255,255,.09);font-size:.66rem}.xp-operator-rule b{color:#fff}.xp-operator-rule span{color:#d7cbc2}
 @media(max-width:520px){.xp-operator-simple{padding:17px!important}}
 """
+
+# CUSTOMER EXPERIENCE V1 — customer-facing club pages must feel like the business, not an admin panel.
+base = Path("/app/app/templates/base.html")
+bt = base.read_text(encoding="utf-8")
+bt = bt.replace(
+    '<body class="{% if request.url.path == \'/\' %}xp-public{% elif request.url.path == \'/login\' %}xp-auth{% else %}xp-app-shell{% endif %}">',
+    '<body class="{% if request.url.path == \'/\' %}xp-public{% elif request.url.path == \'/login\' %}xp-auth{% elif request.url.path.startswith(\'/club/\') or request.url.path.startswith(\'/m/\') or request.url.path.startswith(\'/wallet/mock/\') %}xp-customer{% else %}xp-app-shell{% endif %}">'
+)
+bt = bt.replace(
+    "{% if request.url.path != '/' and request.url.path != '/login' %}",
+    "{% if request.url.path != '/' and request.url.path != '/login' and not request.url.path.startswith('/club/') and not request.url.path.startswith('/m/') and not request.url.path.startswith('/wallet/mock/') %}",
+    1,
+)
+base.write_text(bt, encoding="utf-8")
+
+public_dir = Path("/app/app/templates/public")
+join_path = public_dir / "join.html"
+member_path = public_dir / "member.html"
+wallet_mock_path = public_dir / "wallet_mock.html"
+
+if join_path.exists():
+    t = join_path.read_text(encoding="utf-8")
+    t = t.replace(">Unirme al club<", ">Crear mi tarjeta<")
+    if "xp-customer-join-intro" not in t:
+        intro = r"""
+<section class="xp-customer-join-intro">
+  <span>CLUB DE BENEFICIOS</span>
+  <h2>Tu tarjeta en menos de un minuto.</h2>
+  <p>Déjanos tus datos básicos. Al terminar podrás ver tu progreso y guardar tu tarjeta digital.</p>
+</section>
+"""
+        block = "{% block body %}"
+        if block in t: t = t.replace(block, block + "\n" + intro, 1)
+    join_path.write_text(t, encoding="utf-8")
+
+if member_path.exists():
+    t = member_path.read_text(encoding="utf-8")
+    if "xp-customer-ready" not in t:
+        ready = r"""
+<section class="xp-customer-ready">
+  <span>✓ TU TARJETA ESTÁ LISTA</span>
+  <p>Muéstrala o usa tu QR cuando visites el negocio. Tus visitas y recompensas se actualizan aquí.</p>
+</section>
+"""
+        block = "{% block body %}"
+        if block in t: t = t.replace(block, block + "\n" + ready, 1)
+    t = t.replace("MARKETING OPCIONAL", "BENEFICIOS OPCIONALES")
+    t = t.replace("Activa beneficios cercanos", "Recibe beneficios cuando estés cerca")
+    member_path.write_text(t, encoding="utf-8")
+
+if wallet_mock_path.exists():
+    t = wallet_mock_path.read_text(encoding="utf-8")
+    t = t.replace("WALLET · DEMO", "TARJETA DIGITAL").replace("WALLET · MOCK", "TARJETA DIGITAL")
+    wallet_mock_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* CUSTOMER EXPERIENCE V1 */
+.xp-customer{margin:0;background:#f6f3ee;color:#181410;min-height:100vh}.xp-customer main,.xp-customer .container,.xp-customer .page,.xp-customer .content{width:min(620px,calc(100% - 24px));margin-left:auto;margin-right:auto}.xp-customer button,.xp-customer .btn,.xp-customer .button,.xp-customer input[type=submit]{min-height:50px;border-radius:999px!important;font-weight:850}.xp-customer input,.xp-customer select,.xp-customer textarea{min-height:50px;border:1px solid #d9d1c8!important;border-radius:14px!important;background:#fff!important;padding:12px 14px!important}.xp-customer-join-intro,.xp-customer-ready{width:min(620px,calc(100% - 24px));margin:18px auto 14px;padding:18px 19px;border-radius:20px;background:#fff;border:1px solid #e2dbd2}.xp-customer-join-intro>span,.xp-customer-ready>span{font-size:.58rem;letter-spacing:.13em;font-weight:950;color:#8d5532}.xp-customer-join-intro h2{font-size:1.55rem;line-height:1.02;letter-spacing:-.04em;margin:7px 0}.xp-customer-join-intro p,.xp-customer-ready p{font-size:.73rem;line-height:1.5;color:#756c64;margin:6px 0 0}.xp-customer-ready{background:#efe5dc;border-color:#ddcdbf}.xp-customer-ready>span{color:#6f4025}.xp-customer a{color:#6d3d1f}.xp-customer table{width:100%}
+@media(max-width:520px){.xp-customer-join-intro,.xp-customer-ready{padding:16px}.xp-customer-join-intro h2{font-size:1.4rem}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
