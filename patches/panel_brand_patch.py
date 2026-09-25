@@ -133,5 +133,40 @@ login = re.sub(
 login = re.sub(r'<div class="demo-box">.*?</div>', '', login, count=1, flags=re.S)
 login_path.write_text(login, encoding="utf-8")
 
+
+# Business Panel V1 navigation: surface the already-working modules as a coherent SaaS.
+templates_dir = Path("/app/app/templates/business")
+business_templates = [
+    templates_dir / "dashboard.html",
+    templates_dir / "loyalty.html",
+    templates_dir / "marketing.html",
+    templates_dir / "settings.html",
+    templates_dir / "security.html",
+]
+nav = """<nav class="xp-business-nav" aria-label="Panel del negocio">
+  <a href="/negocio">Inicio</a>
+  <a href="/negocio/lealtad">Clientes y lealtad</a>
+  <a href="/negocio/seguridad">Equipo</a>
+  <a href="/negocio/marketing">Reseñas</a>
+  <a href="/negocio/configuracion">Configuración</a>
+</nav>"""
+for tpl in business_templates:
+    if not tpl.exists():
+        continue
+    t = tpl.read_text(encoding="utf-8")
+    if "xp-business-nav" not in t:
+        block_marker = "{% block body %}"
+        if block_marker in t:
+            t = t.replace(block_marker, block_marker + "\n" + nav, 1)
+    tpl.write_text(t, encoding="utf-8")
+
+css += r"""
+/* BUSINESS PANEL V1 — mobile-first module navigation */
+.xp-business-nav{width:min(1180px,calc(100% - 28px));margin:14px auto 0;display:flex;gap:7px;overflow-x:auto;padding:3px 0 7px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.xp-business-nav::-webkit-scrollbar{display:none}
+.xp-business-nav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:38px;padding:0 13px;border:1px solid #ded8ce;border-radius:999px;background:#fff;color:#4d443d!important;font-size:.72rem;font-weight:850;text-decoration:none!important}
+.xp-business-nav a:hover{border-color:#a96131;color:#6d3d1f!important}
+@media(max-width:720px){.xp-business-nav{width:calc(100% - 24px);margin-top:10px}.xp-business-nav a{min-height:36px;padding:0 12px;font-size:.7rem}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
