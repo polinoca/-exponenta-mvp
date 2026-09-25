@@ -389,5 +389,48 @@ css += r"""
 @media(max-width:760px){.xp-daily-actions{width:calc(100% - 24px);margin-top:14px!important}.xp-daily-grid{grid-template-columns:1fr 1fr}.xp-daily-grid>a{min-height:92px;align-items:flex-start}.xp-daily-grid small{font-size:.61rem}}
 @media(max-width:390px){.xp-daily-grid{grid-template-columns:1fr}.xp-daily-grid>a{min-height:72px;align-items:center}}
 """
+
+# DAILY USE V1.1 — add plain-language orientation inside the three most-used modules.
+module_guides = {
+    "loyalty.html": r"""
+<section class="xp-module-guide">
+  <span class="xp-ss-kicker">CLIENTES</span>
+  <h2>Atiende a tus clientes desde aquí.</h2>
+  <p>Busca a una persona, registra su visita y entrega su recompensa cuando esté disponible.</p>
+  <div class="xp-module-hints"><span><b>1</b> Encuentra al cliente</span><span><b>2</b> Registra la visita</span><span><b>3</b> Canjea cuando corresponda</span></div>
+</section>
+""",
+    "security.html": r"""
+<section class="xp-module-guide">
+  <span class="xp-ss-kicker">TU EQUIPO</span>
+  <h2>Decide quién puede registrar visitas.</h2>
+  <p>Agrega a las personas que atienden clientes. Exponenta mantiene las protecciones técnicas por detrás.</p>
+</section>
+""",
+    "marketing.html": r"""
+<section class="xp-module-guide">
+  <span class="xp-ss-kicker">RESEÑAS</span>
+  <h2>Facilita que un cliente satisfecho te recomiende.</h2>
+  <p>Conecta tu perfil de Google y deja que Exponenta acerque el acceso a la reseña dentro de la experiencia del cliente.</p>
+</section>
+"""
+}
+for filename, guide in module_guides.items():
+    p = templates_dir / filename
+    if not p.exists():
+        continue
+    t = p.read_text(encoding="utf-8")
+    if "xp-module-guide" not in t:
+        nav_end = t.find("</nav>")
+        if nav_end >= 0:
+            nav_end += len("</nav>")
+            t = t[:nav_end] + guide + t[nav_end:]
+    p.write_text(t, encoding="utf-8")
+
+css += r"""
+/* DAILY USE V1.1 — plain-language module orientation */
+.xp-module-guide{width:min(1180px,calc(100% - 28px));margin:12px auto 18px!important;padding:18px 20px!important;background:#fff!important;border:1px solid #e1dad1!important;border-radius:20px!important}.xp-module-guide h2{font-size:1.35rem!important;margin:5px 0 6px!important}.xp-module-guide p{font-size:.75rem!important;line-height:1.5;margin:0!important;max-width:720px}.xp-module-hints{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.xp-module-hints span{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border-radius:999px;background:#f3ece5;font-size:.64rem;color:#5e534b}.xp-module-hints b{width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:#fff;color:#7c4829;font-size:.6rem}
+@media(max-width:720px){.xp-module-guide{width:calc(100% - 24px);padding:16px!important}.xp-module-guide h2{font-size:1.2rem!important}.xp-module-hints{display:grid}.xp-module-hints span{border-radius:12px}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
