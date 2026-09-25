@@ -1,4 +1,9 @@
-from pathlib import Path\n\n# Brand asset: valid transparent vector from the approved Exponenta artwork.\nlogo_svg = Path("/bootstrap/patches/exponenta-logo.svg").read_text(encoding="utf-8")\nPath("/app/app/static/exponenta-logo.svg").write_text(logo_svg, encoding="utf-8")\n\nbase = Path("/app/app/templates/base.html")
+from pathlib import Path
+
+# Brand asset: transparent Exponenta vector.
+logo_svg = Path("/bootstrap/patches/exponenta-logo.svg").read_text(encoding="utf-8")
+Path("/app/app/static/exponenta-logo.svg").write_text(logo_svg, encoding="utf-8")
+base = Path("/app/app/templates/base.html")
 base.write_text("""<!doctype html>
 <html lang="es">
 <head>
