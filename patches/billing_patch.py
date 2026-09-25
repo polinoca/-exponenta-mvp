@@ -74,9 +74,7 @@ def downgrade():
 p=Path("/app/app/main.py"); s=p.read_text()
 if "EXPONENTA BILLING V1" not in s:
  if "import stripe\n" not in s: s=s.replace("import jwt\n","import jwt\nimport stripe\n",1)
- mm=re.search(r"from\s+(?:app\.)?models\s+import\s*\(\n",s)
- if not mm: raise SystemExit("models import block missing")
- a=mm.group(0);s=s[:mm.start()]+a+"    BillingAccount,\\n"+s[mm.end():]
+ if "from app.models import BillingAccount" not in s: s="from app.models import BillingAccount\n"+s
  a='@app.get("/negocio/lealtad", response_class=HTMLResponse)'
  if a not in s: raise SystemExit("route anchor missing")
  routes=r'''
