@@ -38,7 +38,8 @@ PY
 
 RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/google_wallet_patch.py \
-    && python /bootstrap/patches/landing_commercial_patch.py
+    && python /bootstrap/patches/landing_commercial_patch.py \
+    && python /bootstrap/patches/panel_brand_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
