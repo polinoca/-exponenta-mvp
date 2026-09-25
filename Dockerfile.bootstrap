@@ -10,12 +10,16 @@ COPY zipchunks /bootstrap/zipchunks
 
 RUN cat /bootstrap/zipchunks/z00 \
         /bootstrap/zipchunks/z01 \
-        /bootstrap/zipchunks/z02 \
+        /bootstrap/zipchunks/z02_0 \
+        /bootstrap/zipchunks/z02_1 \
+        /bootstrap/zipchunks/z02_2 \
         /bootstrap/zipchunks/z03 \
         /bootstrap/zipchunks/z04 \
         /bootstrap/zipchunks/z05 \
         /bootstrap/zipchunks/z06 \
-        /bootstrap/zipchunks/z07 \
+        /bootstrap/zipchunks/z07_0 \
+        /bootstrap/zipchunks/z07_1 \
+        /bootstrap/zipchunks/z07_2 \
       > /tmp/exponenta.zip.b64 \
     && base64 -d /tmp/exponenta.zip.b64 > /tmp/exponenta.zip \
     && echo "fbb7e39b815822c4bc1afca9acdb0296b0f1f7ec7e36b9c3322ac23c6d39bd21  /tmp/exponenta.zip" | sha256sum -c - \
