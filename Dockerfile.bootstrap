@@ -6,45 +6,35 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app
 
 WORKDIR /bootstrap
-COPY chunks /bootstrap/chunks
+COPY zipchunks /bootstrap/zipchunks
 
-RUN python - <<'PY'
-import base64, io, tarfile
-from pathlib import Path
-
-root = Path("/bootstrap/chunks")
-names = ["00", "part-01", "part-02", "part-03", "part-04", "part-05", "part-06"]
-parts = [root.joinpath(n).read_text().strip() for n in names]
-
-prefix_len = sum(len(x) for x in parts[:4])
-bad = parts[4]
-suffix = "".join(parts[5:])
-prefix = "".join(parts[:4])
-
-def try_archive(s):
-    try:
-        raw = base64.b64decode(s, validate=True)
-        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tf:
-            tf.extractall("/app")
-        return True
-    except Exception:
-        return False
-
-full = prefix + bad + suffix
-if not try_archive(full):
-    fixed = False
-    for i in range(len(bad)):
-        candidate = prefix + bad[:i] + bad[i+1:] + suffix
-        if try_archive(candidate):
-            print(f"Recovered archive by removing one corrupt base64 character at part-04 offset {i}")
-            fixed = True
-            break
-    if not fixed:
-        raise SystemExit("Could not reconstruct Exponenta source archive")
+RUN cat /bootstrap/zipchunks/z00 \
+        /bootstrap/zipchunks/z01 \
+        /bootstrap/zipchunks/z02 \
+        /bootstrap/zipchunks/z03 \
+        /bootstrap/zipchunks/z04 \
+        /bootstrap/zipchunks/z05 \
+        /bootstrap/zipchunks/z06 \
+        /bootstrap/zipchunks/z07 \
+      > /tmp/exponenta.zip.b64 \
+    && base64 -d /tmp/exponenta.zip.b64 > /tmp/exponenta.zip \
+    && echo "fbb7e39b815822c4bc1afca9acdb0296b0f1f7ec7e36b9c3322ac23c6d39bd21  /tmp/exponenta.zip" | sha256sum -c - \
+    && mkdir -p /app \
+    && python - <<'PY'
+import zipfile
+p = "/tmp/exponenta.zip"
+with zipfile.ZipFile(p) as z:
+    bad = z.testzip()
+    if bad:
+        raise SystemExit(f"Corrupt ZIP member: {bad}")
+    z.extractall("/app")
 PY
 
 WORKDIR /app
-RUN pip install --no-cache-dir -r requirements.txt \
+RUN test -f /app/app/__init__.py \
+    && test -f /app/app/config.py \
+    && test -f /app/app/main.py \
+    && pip install --no-cache-dir -r requirements.txt \
     && chmod +x /app/scripts/start.sh
 
 EXPOSE 8000
