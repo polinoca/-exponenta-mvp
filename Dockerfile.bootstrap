@@ -36,13 +36,15 @@ with zipfile.ZipFile(p) as z:
     z.extractall("/app")
 PY
 
-RUN python /bootstrap/patches/production_patch.py
+RUN python /bootstrap/patches/production_patch.py \
+    && python /bootstrap/patches/google_wallet_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
     && test -f /app/app/config.py \
     && test -f /app/app/main.py \
     && pip install --no-cache-dir -r requirements.txt \
+    && python -m compileall -q /app/app \
     && chmod +x /app/scripts/start.sh
 
 EXPOSE 8000
