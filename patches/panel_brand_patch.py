@@ -337,5 +337,57 @@ css += r"""
 /* SELF-SERVICE V1.1 */
 .xp-color-helper{display:grid;gap:7px;margin:8px 0 4px}.xp-color-helper>small,.xp-field-human-help{display:block;font-size:.64rem!important;color:#7c736b!important;line-height:1.4}.xp-color-presets{display:flex;gap:8px;align-items:center}.xp-color-dot{width:31px!important;height:31px!important;min-height:31px!important;padding:0!important;border:3px solid #fff!important;border-radius:50%!important;box-shadow:0 0 0 1px #d5ccc3!important}.xp-color-dot:focus{outline:2px solid #a96131;outline-offset:2px}
 """
+
+# DAILY USE V1 — prioritize the four actions an owner actually needs.
+for tpl in business_templates:
+    if not tpl.exists():
+        continue
+    t = tpl.read_text(encoding="utf-8")
+    t = t.replace('>Clientes y lealtad</a>', '>Clientes</a>')
+    t = t.replace('>Configuración</a>', '>Más</a>')
+    tpl.write_text(t, encoding="utf-8")
+
+if dashboard_path.exists():
+    t = dashboard_path.read_text(encoding="utf-8")
+    if "xp-daily-actions" not in t:
+        daily = r"""
+<section class="xp-daily-actions">
+  <div class="xp-daily-title">
+    <span class="xp-ss-kicker">HOY</span>
+    <h2>¿Qué quieres hacer?</h2>
+  </div>
+  <div class="xp-daily-grid">
+    <a class="xp-daily-primary" href="/negocio/lealtad"><span class="xp-daily-icon">＋</span><span><b>Registrar visita</b><small>Busca al cliente y suma su visita.</small></span></a>
+    <a href="/negocio/lealtad"><span class="xp-daily-icon">⌕</span><span><b>Buscar cliente</b><small>Consulta progreso y recompensas.</small></span></a>
+    <a href="/negocio/lealtad"><span class="xp-daily-icon">★</span><span><b>Entregar recompensa</b><small>Canjea un beneficio disponible.</small></span></a>
+    <a href="#resultados"><span class="xp-daily-icon">↗</span><span><b>Ver resultados</b><small>Clientes, visitas y actividad.</small></span></a>
+  </div>
+</section>
+"""
+        guide_start = t.find('<section class="xp-selfservice-start">')
+        if guide_start >= 0:
+            t = t[:guide_start] + daily + t[guide_start:]
+        else:
+            nav_end = t.find("</nav>")
+            if nav_end >= 0:
+                nav_end += len("</nav>")
+                t = t[:nav_end] + daily + t[nav_end:]
+    # Give the existing metrics area a stable jump target without depending on its markup.
+    if 'id="resultados"' not in t:
+        marker_candidates = ['<main', '<div class="dashboard', '<section']
+        for mc in marker_candidates:
+            pos = t.find(mc)
+            if pos >= 0:
+                # Don't alter main tag syntax; add an anchor immediately before first content candidate.
+                t = t[:pos] + '<span id="resultados" class="xp-anchor"></span>' + t[pos:]
+                break
+    dashboard_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* DAILY USE V1 */
+.xp-daily-actions{width:min(1180px,calc(100% - 28px));margin:18px auto 14px!important;padding:0!important;border:0!important;background:transparent!important}.xp-daily-title{margin-bottom:12px}.xp-daily-title h2{font-size:1.5rem!important;margin:5px 0 0!important}.xp-daily-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.xp-daily-grid>a{display:flex;align-items:center;gap:11px;min-height:84px;padding:14px;border:1px solid #dfd8cf;border-radius:18px;background:#fff;color:#28221d!important;text-decoration:none!important;box-shadow:0 7px 20px rgba(55,40,28,.035)}.xp-daily-grid>a:hover{border-color:#b87549;transform:translateY(-1px)}.xp-daily-grid>a.xp-daily-primary{background:#201914;color:#fff!important;border-color:#201914}.xp-daily-icon{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:#f0e4da;color:#814b2c;font-size:1.05rem;font-weight:700}.xp-daily-primary .xp-daily-icon{background:rgba(255,255,255,.14);color:#fff}.xp-daily-grid a>span:last-child{display:grid;gap:3px}.xp-daily-grid b{font-size:.78rem}.xp-daily-grid small{font-size:.63rem;line-height:1.35;color:#7a7169}.xp-daily-primary small{color:#d6c9c0}.xp-anchor{display:block;position:relative;top:-100px;visibility:hidden}
+@media(max-width:760px){.xp-daily-actions{width:calc(100% - 24px);margin-top:14px!important}.xp-daily-grid{grid-template-columns:1fr 1fr}.xp-daily-grid>a{min-height:92px;align-items:flex-start}.xp-daily-grid small{font-size:.61rem}}
+@media(max-width:390px){.xp-daily-grid{grid-template-columns:1fr}.xp-daily-grid>a{min-height:72px;align-items:center}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
