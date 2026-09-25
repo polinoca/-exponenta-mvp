@@ -519,5 +519,60 @@ css += r"""
 .xp-client-counter{width:min(1180px,calc(100% - 28px));margin:10px auto 18px!important;padding:20px!important;background:#201914!important;color:#fff;border:0!important;border-radius:22px!important}.xp-counter-head h2{color:#fff!important;font-size:1.55rem!important;margin:5px 0 5px!important}.xp-counter-head p{color:#cfc2b8!important;font-size:.72rem!important;margin:0 0 15px!important}.xp-client-search{display:grid;gap:6px;color:#fff!important}.xp-client-search>span{font-size:.66rem;font-weight:850}.xp-client-search input{background:#fff!important;color:#17130f!important;border:0!important;min-height:52px!important;border-radius:15px!important;font-size:1rem!important;padding:0 15px!important}.xp-client-empty{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.1);font-size:.7rem}.xp-client-table .xp-visit-action{background:#201914!important;color:#fff!important;border-color:#201914!important}.xp-client-table .xp-reward-action{background:#f1e4d9!important;color:#704126!important;border-color:#e3cdbb!important}.xp-client-table tr:not([hidden]){transition:background .15s ease}.xp-client-table tr:hover td{background:#fffaf6}
 @media(max-width:720px){.xp-client-counter{width:calc(100% - 24px);padding:17px!important}.xp-client-table{white-space:normal!important}.xp-client-table td{min-width:125px}.xp-client-table button,.xp-client-table .btn,.xp-client-table input[type=submit]{width:100%;white-space:nowrap;margin:3px 0}}
 """
+
+# OPERATOR V1 — make employee mode obvious and safe on a phone.
+# Detect the existing operator template by its content/name so the patch stays compatible with the snapshot.
+operator_candidates = list(Path("/app/app/templates").rglob("*.html"))
+for op in operator_candidates:
+    try:
+        ot = op.read_text(encoding="utf-8")
+    except Exception:
+        continue
+    is_operator = op.name.lower() in {"operator.html", "operate.html", "operation.html"} or (
+        "/operar" in ot and ("sello" in ot.lower() or "visita" in ot.lower()) and "business_staff" not in ot.lower()
+    )
+    if not is_operator or "xp-operator-simple" in ot:
+        continue
+    simple = r"""
+<section class="xp-operator-simple">
+  <span class="xp-ss-kicker">MODO ATENCIÓN</span>
+  <h1>Registra la visita del cliente.</h1>
+  <p>Escanea su tarjeta o abre al cliente. Exponenta valida los límites y permisos automáticamente.</p>
+  <div class="xp-operator-rule"><b>Importante</b><span>Una visita real = un registro. No necesitas hacer ningún cálculo.</span></div>
+</section>
+"""
+    body = "{% block body %}"
+    if body in ot:
+        ot = ot.replace(body, body + "\n" + simple, 1)
+    # Safer wording without changing form endpoints.
+    ot = ot.replace(">Dar sello<", ">+ Registrar visita<").replace(">Sumar sello<", ">+ Registrar visita<").replace(">Agregar sello<", ">+ Registrar visita<")
+    ot = ot.replace(">Canjear<", ">Entregar recompensa<").replace(">Canjear recompensa<", ">Entregar recompensa<")
+    op.write_text(ot, encoding="utf-8")
+
+# Add an explicit confirmation only for reward delivery, never for ordinary visits.
+if loyalty_path.exists():
+    t = loyalty_path.read_text(encoding="utf-8")
+    if "xp-reward-confirm-script" not in t:
+        confirm_script = r"""
+<script id="xp-reward-confirm-script">
+document.addEventListener('click', (event) => {
+  const el = event.target.closest('.xp-reward-action');
+  if (!el) return;
+  if (!window.confirm('¿Entregar esta recompensa ahora? Esta acción quedará registrada.')) event.preventDefault();
+});
+</script>
+"""
+        endblock = "{% endblock %}"
+        if endblock in t:
+            t = t.replace(endblock, confirm_script + "\n" + endblock, 1)
+        else:
+            t += confirm_script
+    loyalty_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* OPERATOR V1 */
+.xp-operator-simple{width:min(720px,calc(100% - 24px));margin:16px auto 18px!important;padding:20px!important;border:0!important;border-radius:22px!important;background:#201914!important;color:#fff!important}.xp-operator-simple h1{color:#fff!important;font-size:clamp(1.8rem,8vw,2.6rem)!important;margin:6px 0 8px!important}.xp-operator-simple p{color:#d3c7be!important;font-size:.76rem!important;line-height:1.5}.xp-operator-rule{display:flex;gap:8px;align-items:flex-start;margin-top:15px;padding:11px 12px;border-radius:13px;background:rgba(255,255,255,.09);font-size:.66rem}.xp-operator-rule b{color:#fff}.xp-operator-rule span{color:#d7cbc2}
+@media(max-width:520px){.xp-operator-simple{padding:17px!important}}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
