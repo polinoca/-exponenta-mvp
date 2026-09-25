@@ -56,7 +56,7 @@ landing = r"""{% extends "base.html" %}
         <div class="xp5-phone">
           <div class="xp5-phone-top"><span>9:41</span><span>● ● ●</span></div>
           <div class="xp5-card">
-            <small>LINОPO · MI CLUB</small>
+            <small>LINOPO · MI CLUB</small>
             <h3>Tu próxima recompensa está cerca.</h3>
             <strong>6 <i>de 9 visitas</i></strong>
             <div class="xp5-stamps">{% for i in range(9) %}<b class="{% if i < 6 %}on{% endif %}"></b>{% endfor %}</div>
