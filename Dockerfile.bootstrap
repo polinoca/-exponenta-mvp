@@ -23,7 +23,7 @@ RUN cat /bootstrap/zipchunks/z00 \
         /bootstrap/zipchunks/z07_2 \
       > /tmp/exponenta.zip.b64 \
     && base64 -d /tmp/exponenta.zip.b64 > /tmp/exponenta.zip \
-    && echo "fbb7e39b815822c4bc1afca9acdb0296b0f1f7ec7e36b9c3322ac23c6d39bd21  /tmp/exponenta.zip" | sha256sum -c - \
+    && echo "a2bf14df15b450c4f23023368d5ead6dd1bde6bc0f19d65df41accfd775104cc  /tmp/exponenta.zip" | sha256sum -c - \
     && mkdir -p /app \
     && python - <<'PY'
 import zipfile
