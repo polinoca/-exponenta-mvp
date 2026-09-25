@@ -208,6 +208,9 @@ def wallet_hero_image(org_id:int,db:Session=Depends(get_db)):
        orgvar="org" if "org" in left else "organization"
        out.append(indent+f'require_org_feature(db,{orgvar},"{current_feature}")')
     s="\n".join(out)+"\n"
+    wallet_gate='    program = membership.program\n    organization = db.get(Organization, program.organization_id)'
+    if wallet_gate in s:
+     s=s.replace(wallet_gate,'    program = membership.program\n    if not org_feature_on(db,program.organization_id,"wallet"): raise HTTPException(404)\n    organization = db.get(Organization, program.organization_id)',1)
     p.write_text(s)
 
 # Admin pages.
