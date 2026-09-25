@@ -25,7 +25,13 @@ js = r'''(() => {
     ["Activar notificaciones","Enable notifications"],["Activar ubicación","Enable location"],
     ["⭐ Dejar reseña en Google","⭐ Leave a Google review"],["PROGRESO","PROGRESS"],
     [" recompensa disponible"," reward available"],[" recompensas disponibles"," rewards available"],
-    ["Ver tarjeta completa","View full card"],["Miembro","Member"]
+    ["Ver tarjeta completa","View full card"],["Miembro","Member"],
+    ["CLUB DE BENEFICIOS","BENEFITS CLUB"],["Tu tarjeta en menos de un minuto.","Your card in less than a minute."],
+    ["Déjanos tus datos básicos. Al terminar podrás ver tu progreso y guardar tu tarjeta digital.","Share your basic details. When you finish, you can see your progress and save your digital card."],
+    ["Crear mi tarjeta","Create my card"],["✓ TU TARJETA ESTÁ LISTA","✓ YOUR CARD IS READY"],
+    ["Muéstrala o usa tu QR cuando visites el negocio. Tus visitas y recompensas se actualizan aquí.","Show it or use your QR when you visit. Your visits and rewards update here."],
+    ["BENEFICIOS OPCIONALES","OPTIONAL BENEFITS"],["Recibe beneficios cuando estés cerca","Get benefits when you're nearby"],
+    ["TARJETA DIGITAL","DIGITAL CARD"]
   ];
   const esToEn = new Map(pairs), enToEs = new Map(pairs.map(([es,en]) => [en,es]));
 
