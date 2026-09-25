@@ -168,5 +168,27 @@ css += r"""
 .xp-business-nav a:hover{border-color:#a96131;color:#6d3d1f!important}
 @media(max-width:720px){.xp-business-nav{width:calc(100% - 24px);margin-top:10px}.xp-business-nav a{min-height:36px;padding:0 12px;font-size:.7rem}}
 """
+
+# Remove legacy business navigation buttons now replaced by xp-business-nav.
+for tpl in business_templates:
+    if not tpl.exists():
+        continue
+    t = tpl.read_text(encoding="utf-8")
+    t = re.sub(
+        r'(<header class="site-header">\s*<a class="brand"[^>]*>.*?</a>)\s*<div>.*?</div>(\s*</header>)',
+        r'\1\2',
+        t,
+        count=1,
+        flags=re.S,
+    )
+    tpl.write_text(t, encoding="utf-8")
+
+css += r"""
+/* BUSINESS PANEL V1.1 — legacy nav cleanup */
+@media(max-width:720px){
+  .business-shell .site-header{height:auto;min-height:58px;padding:14px 0 6px}
+  .business-shell .site-header .brand{font-size:1.35rem;line-height:1.1}
+}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
