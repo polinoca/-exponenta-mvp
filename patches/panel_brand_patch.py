@@ -889,5 +889,22 @@ css += r"""
 /* SELF-SERVICE LOGO V1 */
 .xp-logo-upload{display:grid;gap:9px;margin:12px 0 15px;padding:14px;border-radius:16px;background:#f7f1eb;border:1px solid #e2d4c8}.xp-logo-upload label{display:grid;gap:7px;font-size:.7rem;font-weight:850}.xp-logo-upload input[type=file]{min-height:auto!important;padding:10px!important;background:#fff!important}.xp-logo-upload small{font-size:.61rem;color:#776d65}.xp-advanced-logo{margin-top:8px}.xp-advanced-logo summary{cursor:pointer;font-size:.64rem;color:#766a61}.xp-advanced-logo details[open]{padding:10px;border-radius:12px;background:#faf7f3}.xp-advanced-logo details form{margin-top:10px}
 """
+
+# DASHBOARD CLEANUP V1 — remove pilot/technical residue and premiumize metrics.
+if dashboard_path.exists():
+    t = dashboard_path.read_text(encoding="utf-8")
+    # Remove the obsolete original pilot checklist now superseded by automatic onboarding.
+    pilot = '<section class="panel-card" style="margin-top:16px"><div class="card-head"><div><span class="kicker">PILOTO</span><h2>Checklist para salir a vender</h2></div></div><ul class="roadmap-mini"><li class="done">Negocio y acceso administrativo</li><li class="{% if program %}done{% endif %}">Programa de lealtad configurado</li><li class="{% if code_count > 0 %}done{% endif %}">Al menos un QR/NFC conectado</li><li class="done">Seguridad y auditoría de sellos</li><li class="done">Club público y Wallet demo</li></ul><div style="margin-top:14px"><a class="btn btn-secondary" href="/negocio/configuracion">Revisar configuración</a></div></section>'
+    t = t.replace(pilot, "")
+    t = t.replace("Tu recurrencia, sin ruido.", "Todo lo importante, en un solo lugar.")
+    t = t.replace("Sellos, recompensas, Wallet y CTA principal. Las operaciones quedan auditadas y protegidas contra duplicados y abuso.", "Clientes, visitas y recompensas. Exponenta protege cada registro automáticamente.")
+    t = t.replace("Push + ubicación", "Mantén el contacto")
+    t = t.replace("Consentimiento, geocerca y segmentos para campañas cercanas. Web Push real se activa con VAPID.", "Reseñas y herramientas para volver a conectar con tus clientes cuando tenga sentido.")
+    dashboard_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* DASHBOARD CLEANUP V1 */
+.business-shell .stat-card.accent{background:#efe3d8!important;border-color:#dcc7b6!important}.business-shell .stat-card.accent span{color:#725039!important}.business-shell>h1{font-size:clamp(2.05rem,7vw,3rem)!important;line-height:1!important;max-width:760px}.business-shell .eyebrow{color:#8b5a3b}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
