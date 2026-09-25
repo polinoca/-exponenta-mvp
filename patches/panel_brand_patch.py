@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 base = Path("/app/app/templates/base.html")
 text = base.read_text(encoding="utf-8")
@@ -25,6 +26,23 @@ base.write_text(text.replace(old, new), encoding="utf-8")
 
 css_path = Path("/app/app/static/app.css")
 css = css_path.read_text(encoding="utf-8")
+css += r"""
+/* EXPONENTA MOBILE QA V4 */
+.xp-auth .auth-shell{padding:18px;background:#f6f3ee}
+.xp-auth .auth-card{gap:22px}
+.xp-auth-brand{display:block;width:104px;line-height:0}
+.xp-auth-brand img{display:block;width:100%;height:auto}
+@media(max-width:560px){
+  .xp-logo img{width:82px;max-height:58px;object-fit:contain}
+  .xp-nav-inner{height:68px}
+  .xp-hero{padding:44px 0 62px;gap:38px}
+  .xp-hero-copy h1{font-size:clamp(2.75rem,12vw,3.25rem);line-height:.94;letter-spacing:-.055em}
+  .xp-lead{font-size:1rem;line-height:1.52}
+  .xp-section{padding:64px 0}
+  .xp-final{padding:58px 0}
+  .xp-footer img{width:92px}
+}
+"""
 css += r"""
 /* EXPONENTA APP SHELL V1 — shared visual system with commercial landing */
 .xp-app-shell{--xp-bg:#f6f3ee;--xp-surface:#fff;--xp-ink:#15130f;--xp-muted:#706c64;--xp-line:#ded8ce;--xp-brown:#6d3d1f;--xp-copper:#a96131;--xp-copper2:#c47a47;background:var(--xp-bg)!important;color:var(--xp-ink)!important;min-height:100vh}
@@ -101,5 +119,19 @@ css += r"""
   .xp-app-shell main{padding-top:34px}
 }
 """
+
+# Production login: use the approved brand asset and never expose demo credentials.
+login_path = Path("/app/app/templates/login.html")
+login = login_path.read_text(encoding="utf-8")
+login = re.sub(
+    r'<a class="brand" href="/">.*?</a>',
+    '<a class="brand xp-auth-brand" href="/" aria-label="Exponenta"><img src="/static/exponenta-logo.svg?v=20260925-7" alt="Exponenta"></a>',
+    login,
+    count=1,
+    flags=re.S,
+)
+login = re.sub(r'<div class="demo-box">.*?</div>', '', login, count=1, flags=re.S)
+login_path.write_text(login, encoding="utf-8")
+
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
