@@ -767,5 +767,127 @@ css += r"""
 /* ONBOARDING STATE V1 */
 .xp-onboarding-meter{height:7px;margin:13px 0 15px;border-radius:999px;background:#eadfd5;overflow:hidden}.xp-onboarding-meter i{display:block;height:100%;border-radius:inherit;background:#8a4d2b;transition:width .3s ease}.xp-onboarding-steps>a.done{background:#f3eee8!important;border-color:#d8c6b7!important}.xp-onboarding-steps>a.done>b{background:#6b3b22!important;color:#fff!important}.xp-onboarding-steps>a.done strong{color:#57321f}.xp-ready-complete{background:#57351f!important}
 """
+
+# SELF-SERVICE LOGO V1 — direct logo upload stored durably in Postgres.
+models_path = Path("/app/app/models.py")
+models_src = models_path.read_text(encoding="utf-8")
+if "logo_blob:" not in models_src:
+    models_src = models_src.replace(
+        "from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint",
+        "from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint"
+    )
+    models_src = models_src.replace(
+        '    logo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)\n',
+        '    logo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)\n    logo_blob: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)\n    logo_mime: Mapped[Optional[str]] = mapped_column(String(80), nullable=True)\n',
+        1
+    )
+    models_path.write_text(models_src, encoding="utf-8")
+
+migration_path = Path("/app/alembic/versions/c4e7a1b29d11_add_business_logo_upload.py")
+if not migration_path.exists():
+    migration_path.write_text('''"""add business logo upload
+
+Revision ID: c4e7a1b29d11
+Revises: 5f40161e0910
+"""
+from alembic import op
+import sqlalchemy as sa
+
+revision = "c4e7a1b29d11"
+down_revision = "5f40161e0910"
+branch_labels = None
+depends_on = None
+
+def upgrade():
+    op.add_column("organizations", sa.Column("logo_blob", sa.LargeBinary(), nullable=True))
+    op.add_column("organizations", sa.Column("logo_mime", sa.String(length=80), nullable=True))
+
+def downgrade():
+    op.drop_column("organizations", "logo_mime")
+    op.drop_column("organizations", "logo_blob")
+''', encoding="utf-8")
+
+main_path = Path("/app/app/main.py")
+main_src = main_path.read_text(encoding="utf-8")
+if "business_logo_upload" not in main_src:
+    main_src = main_src.replace(
+        "from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response, status",
+        "from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile, status"
+    )
+    route_anchor = '@app.get("/negocio/lealtad", response_class=HTMLResponse)'
+    logo_routes = r'''
+@app.post("/negocio/configuracion/logo")
+async def business_logo_upload(
+    request: Request,
+    logo_file: UploadFile = File(...),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    _, org = business_admin_context(request, db)
+    verify_csrf(request, csrf_token)
+    allowed = {"image/png", "image/jpeg", "image/webp"}
+    if logo_file.content_type not in allowed:
+        raise HTTPException(422, "Usa una imagen PNG, JPG o WebP")
+    content = await logo_file.read()
+    if not content or len(content) > 2 * 1024 * 1024:
+        raise HTTPException(422, "El logotipo debe pesar menos de 2 MB")
+    signatures_ok = (
+        (logo_file.content_type == "image/png" and content.startswith(b"\\x89PNG\\r\\n\\x1a\\n"))
+        or (logo_file.content_type == "image/jpeg" and content.startswith(b"\\xff\\xd8\\xff"))
+        or (logo_file.content_type == "image/webp" and content[:4] == b"RIFF" and content[8:12] == b"WEBP")
+    )
+    if not signatures_ok:
+        raise HTTPException(422, "El archivo no parece una imagen válida")
+    org.logo_blob = content
+    org.logo_mime = logo_file.content_type
+    org.logo_url = f"{settings.app_base_url.rstrip('/')}/media/organization/{org.slug}/logo"
+    db.commit()
+    return RedirectResponse("/negocio/configuracion?message=Logo+actualizado", status_code=303)
+
+
+@app.get("/media/organization/{slug}/logo")
+def business_logo_media(slug: str, db: Session = Depends(get_db)):
+    org = db.scalar(select(Organization).where(Organization.slug == slug, Organization.status == OrganizationStatus.ACTIVE))
+    if not org or not org.logo_blob or not org.logo_mime:
+        raise HTTPException(404, "Logo no disponible")
+    return Response(
+        content=org.logo_blob,
+        media_type=org.logo_mime,
+        headers={"Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff"},
+    )
+
+
+'''
+    if route_anchor in main_src:
+        main_src = main_src.replace(route_anchor, logo_routes + route_anchor, 1)
+        main_path.write_text(main_src, encoding="utf-8")
+
+if settings_path.exists():
+    t = settings_path.read_text(encoding="utf-8")
+    if "xp-logo-upload" not in t:
+        identity = '<form method="post" action="/negocio/configuracion" class="form-stack">'
+        upload = r"""
+<form class="xp-logo-upload" method="post" action="/negocio/configuracion/logo" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label><span>Tu logotipo</span><input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp" required></label>
+  <small>PNG, JPG o WebP · máximo 2 MB</small>
+  <button class="btn btn-secondary" type="submit">{% if organization.logo_url %}Cambiar logotipo{% else %}Subir logotipo{% endif %}</button>
+</form>
+<div class="xp-advanced-logo"><details><summary>Usar una dirección web en lugar de subir archivo</summary>
+"""
+        if identity in t:
+            t = t.replace(identity, upload + "\n" + identity, 1)
+            # Close details after the original identity form.
+            form_end_pos = t.find("</form>", t.find(identity))
+            if form_end_pos >= 0:
+                form_end_pos += len("</form>")
+                t = t[:form_end_pos] + "</details></div>" + t[form_end_pos:]
+        t = t.replace("El logotipo puede quedar vacío durante el piloto. Más adelante habilitaremos carga directa de archivos.", "Puedes cambiar tu logo cuando quieras. Exponenta lo reutiliza en tu tarjeta y experiencia del cliente.")
+    settings_path.write_text(t, encoding="utf-8")
+
+css += r"""
+/* SELF-SERVICE LOGO V1 */
+.xp-logo-upload{display:grid;gap:9px;margin:12px 0 15px;padding:14px;border-radius:16px;background:#f7f1eb;border:1px solid #e2d4c8}.xp-logo-upload label{display:grid;gap:7px;font-size:.7rem;font-weight:850}.xp-logo-upload input[type=file]{min-height:auto!important;padding:10px!important;background:#fff!important}.xp-logo-upload small{font-size:.61rem;color:#776d65}.xp-advanced-logo{margin-top:8px}.xp-advanced-logo summary{cursor:pointer;font-size:.64rem;color:#766a61}.xp-advanced-logo details[open]{padding:10px;border-radius:12px;background:#faf7f3}.xp-advanced-logo details form{margin-top:10px}
+"""
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
