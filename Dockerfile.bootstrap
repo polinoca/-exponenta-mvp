@@ -1,3 +1,4 @@
+# verified source snapshot 2026-09-25
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
