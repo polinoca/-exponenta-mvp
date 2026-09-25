@@ -12,7 +12,7 @@ base.write_text("""<!doctype html>
   <meta name="description" content="Exponenta ayuda a negocios locales a convertir visitas en clientes recurrentes, recompensas, reseñas y datos útiles.">
   <meta name="theme-color" content="#f6f1ea">
   <title>{% block title %}Exponenta{% endblock %}</title>
-  <link rel="stylesheet" href="/static/app.css?v=20260925-9">
+  <link rel="stylesheet" href="/static/app.css?v=20260925-10">
 </head>
 <body>
   {% block body %}{% endblock %}
@@ -36,6 +36,7 @@ landing = r"""{% extends "base.html" %}
         <a href="#como">Cómo funciona</a>
         <a href="#faq">Preguntas</a>
       </nav>
+      <button class="xp5-lang" type="button" data-lang-toggle aria-label="Cambiar idioma">ES / EN</button>
       {% if user %}<a class="xp4-btn xp4-btn-dark xp4-small" href="/panel">Abrir panel</a>{% else %}<a class="xp4-btn xp4-btn-ghost xp4-small" href="/login">Ingresar</a>{% endif %}
     </div>
   </header>
@@ -194,6 +195,64 @@ landing = r"""{% extends "base.html" %}
     <span>© 2026 Exponenta</span>
   </footer>
 </div>
+<script>
+(() => {
+  const pairs = [
+    ["Convierte cada visita en una relación que puede crecer.","Turn every visit into a relationship that can grow."],
+    ["Beneficios","Benefits"],["Fidelización","Loyalty"],["Cómo funciona","How it works"],["Preguntas","FAQ"],
+    ["Abrir panel","Open dashboard"],["Ingresar","Log in"],["FIDELIZACIÓN PARA NEGOCIOS LOCALES","LOYALTY FOR LOCAL BUSINESSES"],
+    ["Haz que tus clientes","Make your customers"],["quieran volver.","want to come back."],
+    ["Exponenta convierte una visita en una relación: tus clientes acumulan beneficios, regresan con más facilidad y tú entiendes mejor qué está funcionando en tu negocio.","Exponenta turns a visit into a relationship: customers earn benefits, come back more easily, and you understand what is working in your business."],
+    ["Ver cómo funciona","See how it works"],["Ir a mi panel","Go to my dashboard"],["Ya soy cliente","I'm already a customer"],
+    ["Tu próxima recompensa está cerca.","Your next reward is close."],["de 9 visitas","of 9 visits"],["Tu próxima bebida va por la casa","Your next drink is on us"],["Agregar a Wallet","Add to Wallet"],
+    ["Visita registrada","Visit recorded"],["Progreso actualizado","Progress updated"],["Reseña recibida","Review received"],["La relación continúa","The relationship continues"],
+    ["LO QUE IMPORTA","WHAT MATTERS"],["Tus clientes vuelven una y otra vez.","Your customers come back again and again."],
+    ["Nos concentramos en tres cosas que un negocio local sí puede aprovechar todos los días.","We focus on what a local business can actually use every day."],
+    ["Más recurrencia.","More repeat visits."],["Una tarjeta digital de tu propia marca mantiene visible el progreso del cliente y le da una razón concreta para regresar.","A digital card with your brand keeps progress visible and gives customers a clear reason to return."],
+    ["Visitas y sellos","Visits and stamps"],["Recompensas claras","Clear rewards"],["Experiencia desde el celular","Mobile-first experience"],
+    ["Datos que sí sirven.","Data you can use."],["No necesitas otro sistema lleno de información que nadie consulta. Exponenta te ayuda a ver actividad real de tus clientes.","You don't need another system full of data nobody uses. Exponenta helps you see real customer activity."],
+    ["Quién está regresando","Who is coming back"],["Cuántas visitas acumula","How many visits they have"],["Qué recompensas se entregan","Which rewards are delivered"],
+    ["Reputación conectada.","Connected reputation."],["La relación no termina al cobrar. Puedes facilitar que los clientes satisfechos compartan su experiencia y vuelvan a contactar al negocio.","The relationship doesn't end at checkout. Make it easy for happy customers to share their experience and reconnect with your business."],
+    ["Acceso a reseñas","Review access"],["Contacto directo","Direct contact"],["Actividad medible","Measurable activity"],
+    ["¿Cómo fue tu experiencia?","How was your experience?"],["Comparte tu opinión y ayuda a otros a conocernos.","Share your experience and help others discover us."],["Dejar mi reseña","Leave a review"],
+    ["TU PROGRAMA DE FIDELIZACIÓN","YOUR LOYALTY PROGRAM"],["Simple para tu cliente.","Simple for your customer."],["Útil para tu negocio.","Useful for your business."],
+    ["Empieza con una mecánica que todos entienden: visitar, acumular y recibir una recompensa.","Start with a mechanic everyone understands: visit, earn progress, receive a reward."],
+    ["Tarjeta de visitas","Visit card"],["Cada compra o visita acerca al cliente a un beneficio definido por tu negocio.","Every purchase or visit moves the customer closer to a benefit defined by your business."],
+    ["Recompensas","Rewards"],["Define el incentivo que tenga sentido para tu margen y para el comportamiento que quieres repetir.","Define an incentive that makes sense for your margins and the behavior you want to repeat."],
+    ["Experiencia de marca","Branded experience"],["El cliente ve tu negocio, su progreso y su beneficio desde una experiencia móvil sencilla.","Customers see your business, progress and benefits in one simple mobile experience."],
+    ["ASÍ FUNCIONA","HOW IT WORKS"],["Tu cliente lo entiende en segundos.","Your customer gets it in seconds."],["Entra a tu club","Join your club"],["Acumula progreso","Build progress"],["Recibe y vuelve","Earn and return"],
+    ["El cliente accede desde el punto de contacto de tu negocio, sin descargar una aplicación.","Customers join from your business touchpoint, with no app download."],
+    ["Tu equipo registra la visita y el cliente ve cómo se acerca a su siguiente beneficio.","Your team records the visit and the customer sees progress toward the next benefit."],
+    ["La recompensa crea una razón visible para regresar y mantener la relación activa.","The reward creates a visible reason to return and keep the relationship active."],
+    ["HECHO PARA NEGOCIOS REALES","BUILT FOR REAL BUSINESSES"],["Una solución.","One solution."],["Muchas formas de hacer que vuelvan.","Many ways to bring them back."],
+    ["El programa cambia según tu negocio; la experiencia sigue siendo simple para tu cliente.","The program adapts to your business while the customer experience stays simple."],
+    ["CAFETERÍAS Y RESTAURANTES","CAFÉS & RESTAURANTS"],["ESTÉTICAS Y SALONES","BEAUTY & SALONS"],["GIMNASIOS Y ESTUDIOS","GYMS & STUDIOS"],["CLÍNICAS Y CONSULTORIOS","CLINICS & PRACTICES"],["RETAIL Y COMERCIOS","RETAIL & LOCAL SHOPS"],
+    ["Premia la frecuencia.","Reward frequency."],["Convierte una cita en la siguiente.","Turn one appointment into the next."],["Haz visible el progreso.","Make progress visible."],["Cuida también el regreso.","Take care of the return visit."],["Da una razón para volver.","Give them a reason to return."],
+    ["UNA EXPERIENCIA MODERNA","A MODERN EXPERIENCE"],["Tu cliente, siempre conectado con tu negocio.","Keep your customer connected to your business."],
+    ["Su progreso vive en el celular. Puede consultar beneficios, recibir su recompensa, volver a contactar al negocio y acceder a reseñas desde una experiencia simple.","Their progress lives on their phone. They can check benefits, receive rewards, reconnect with your business and access reviews from one simple experience."],
+    ["MÁS QUE UNA TARJETA","MORE THAN A CARD"],["Todo conectado alrededor del cliente.","Everything connected around the customer."],
+    ["Reseñas","Reviews"],["Recurrencia","Retention"],["Clientes","Customers"],["Equipo","Team"],
+    ["ANTES Y DESPUÉS","BEFORE & AFTER"],["De una visita aislada a una relación medible.","From a one-time visit to a measurable relationship."],
+    ["Sin un sistema","Without a system"],["Con Exponenta","With Exponenta"],["PREGUNTAS FRECUENTES","FREQUENTLY ASKED QUESTIONS"],["Lo esencial, sin complicarlo.","The essentials, without the complexity."],
+    ["¿Qué es Exponenta?","What is Exponenta?"],["¿El cliente tiene que descargar una app?","Does the customer need to download an app?"],["¿Cómo entra el cliente a su tarjeta?","How does the customer access their card?"],["¿Puedo controlar lo que hacen mis empleados?","Can I control what my staff can do?"],
+    ["CLIENTES QUE VUELVEN","CUSTOMERS WHO COME BACK"],["Tu próxima venta puede empezar con alguien que ya te conoce.","Your next sale can start with someone who already knows you."],["Convierte la visita de hoy en una razón para regresar mañana.","Turn today's visit into a reason to come back tomorrow."],
+    ["Fidelización y recurrencia para negocios locales.","Loyalty and repeat business for local businesses."]
+  ];
+  const esToEn = new Map(pairs), enToEs = new Map(pairs.map(([es,en]) => [en,es]));
+  function apply(lang){
+    const map = lang === "en" ? esToEn : enToEs;
+    const walker = document.createTreeWalker(document.querySelector(".xp4"), NodeFilter.SHOW_TEXT);
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => { const raw=n.nodeValue, key=raw.trim(); if(map.has(key)) n.nodeValue=raw.replace(key,map.get(key)); });
+    document.documentElement.lang = lang;
+    localStorage.setItem("exponenta_lang",lang);
+    const b=document.querySelector("[data-lang-toggle]"); if(b) b.textContent=lang==="es"?"ES / EN":"EN / ES";
+  }
+  let lang=localStorage.getItem("exponenta_lang") || ((navigator.language||"").toLowerCase().startsWith("en") ? "en" : "es");
+  apply(lang);
+  document.querySelector("[data-lang-toggle]")?.addEventListener("click",()=>{lang=lang==="es"?"en":"es";apply(lang)});
+})();
+</script>
 {% endblock %}
 """
 Path("/app/app/templates/landing.html").write_text(landing, encoding="utf-8")
@@ -224,6 +283,12 @@ css += r"""
 @media(max-width:679px){.xp5-hero-media{min-height:535px;border-radius:25px}.xp5-hero-media>img{object-position:35% center}.xp5-shade{background:linear-gradient(180deg,rgba(20,13,9,.05),rgba(20,13,9,.28))}.xp5-phone{width:250px;right:50%;transform:translate(50%,-45%) rotate(1deg)}.xp5-card{min-height:350px;padding:18px}.xp5-card h3{font-size:1.3rem;margin:16px 0}.xp5-card>strong{font-size:2.5rem}.xp5-toast{display:none}.xp5-overlay-card,.xp5-overlay-metrics,.xp5-overlay-review{margin:14px}.xp5-casegrid{grid-template-columns:1fr 1fr}.xp5-casegrid article{min-height:245px}.xp5-casegrid article:last-child{grid-column:1/-1}.xp5-casegrid article>div{left:14px;right:14px;bottom:14px}.xp5-casegrid h3{font-size:1rem}.xp5-casegrid p{display:none}.xp5-connected-visual{min-height:455px}.xp5-notification{font-size:.61rem;padding:9px 10px}}
 @media(min-width:680px){.xp5-casegrid{grid-template-columns:repeat(6,1fr)}.xp5-casegrid article{grid-column:span 2}.xp5-casegrid article:nth-child(4),.xp5-casegrid article:nth-child(5){grid-column:span 3}.xp5-connected-grid{grid-template-columns:1fr 1fr}}
 @media(min-width:900px){.xp5-cases,.xp5-connected{padding:110px 0}.xp5-casegrid article{min-height:380px}}
+"""
+css += r"""
+/* LANDING V5.1 — ES/EN switch */
+.xp5-lang{flex:0 0 auto;border:0;background:transparent;color:#665d56;font:inherit;font-size:.68rem;font-weight:900;letter-spacing:.04em;padding:9px 5px;cursor:pointer}
+.xp5-lang:hover{color:#8a4d2b}
+@media(max-width:520px){.xp5-lang{margin-left:auto}.xp4-navin>.xp4-btn{margin-left:0}.xp4-navin{gap:10px}.xp4-logo img{width:82px}}
 """
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta landing V4 installed")
