@@ -45,7 +45,7 @@ WORKDIR /app
 RUN test -f /app/app/__init__.py \
     && test -f /app/app/config.py \
     && test -f /app/app/main.py \
-    && test -f /app/app/static/exponenta-logo.webp \
+    && test -f /app/app/static/exponenta-logo.svg \
     && pip install --no-cache-dir -r requirements.txt \
     && python -m compileall -q /app/app \
     && chmod +x /app/scripts/start.sh
