@@ -114,7 +114,7 @@ def google_wallet_save_url(
         "cardTitle": {"defaultValue": {"language": "es-MX", "value": organization.name}},
         "header": {"defaultValue": {"language": "es-MX", "value": program.name}},
         "subheader": {"defaultValue": {"language": "es-MX", "value": customer.name}},
-        "hexBackgroundColor": organization.brand_color or "#111111",
+        "hexBackgroundColor": (wallet_branding.background_color if wallet_branding and wallet_branding.background_color else organization.brand_color) or "#111111",
         "barcode": {"type": "QR_CODE", "value": member_url},
         "textModulesData": [
             {
@@ -152,6 +152,11 @@ def google_wallet_save_url(
         wallet_object["logo"] = {
             "sourceUri": {"uri": organization.logo_url},
             "contentDescription": {"defaultValue": {"language": "es-MX", "value": organization.name}},
+        }
+    if wallet_branding and wallet_branding.hero_image:
+        wallet_object["heroImage"] = {
+            "sourceUri": {"uri": f"{settings.app_base_url.rstrip('/')}/branding/wallet/{organization.id}/hero"},
+            "contentDescription": {"defaultValue": {"language": "es-MX", "value": f"Imagen de {organization.name}"}},
         }
 
     claims = {
@@ -221,11 +226,13 @@ def member_wallet(token: str, provider: str, db: Session = Depends(get_db)):
     redirect_url = f"/wallet/mock/{provider}/{membership.wallet_token}"
     if provider == "google" and settings.google_wallet_ready:
         try:
+            wallet_branding = db.scalar(select(WalletBranding).where(WalletBranding.organization_id == organization.id)) if "WalletBranding" in globals() else None
             redirect_url, external_id = google_wallet_save_url(
                 membership=membership,
                 customer=customer,
                 program=program,
                 organization=organization,
+                wallet_branding=wallet_branding,
             )
             existing.status = "ready"
             existing.external_id = external_id
