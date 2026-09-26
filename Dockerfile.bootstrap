@@ -42,6 +42,7 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/panel_brand_patch.py \
     && python /bootstrap/patches/billing_patch.py \
     && python /bootstrap/patches/control_center_patch.py \
+    && python /bootstrap/patches/plan_templates_patch.py \
     && python /bootstrap/patches/i18n_public_patch.py
 
 WORKDIR /app
