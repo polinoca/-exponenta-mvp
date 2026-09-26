@@ -40,11 +40,9 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
    updated=stripe.Subscription.modify(
     b.stripe_subscription_id,
     items=[{"id":items[0]["id"],"price":prices[interval],"quantity":1}],
-    payment_behavior="pending_if_incomplete",
     proration_behavior="always_invoice",
     metadata={"organization_id":str(org.id),"interval":interval},
     cancel_at_period_end=False,
-    expand=["latest_invoice"],
    )
    pending=updated.get("pending_update")
    invoice=updated.get("latest_invoice")
@@ -64,8 +62,9 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
     b.current_period_end=datetime.fromtimestamp(pe,tz=timezone.utc)
    db.add(b);db.commit()
    return RedirectResponse("/negocio/plan?message=Plan+actualizado+correctamente",status_code=303)
-  except Exception:
-   return RedirectResponse("/negocio/plan?message=No+se+pudo+actualizar+el+plan.+Intenta+desde+Administrar+pagos",status_code=303)
+  except Exception as e:
+   print("STRIPE_PLAN_SWITCH_ERROR",type(e).__name__,str(e),flush=True)
+   return RedirectResponse("/negocio/plan?message=No+se+pudo+actualizar+el+plan.+Intenta+de+nuevo",status_code=303)
 
  kw={"mode":"subscription","line_items":[{"price":prices[interval],"quantity":1}],"success_url":settings.app_base_url+"/negocio/plan?message=Suscripcion+activada","cancel_url":settings.app_base_url+"/negocio/plan","client_reference_id":str(org.id),"allow_promotion_codes":True,"metadata":{"organization_id":str(org.id),"interval":interval},"subscription_data":{"metadata":{"organization_id":str(org.id),"interval":interval}}}
  if b.stripe_customer_id:kw["customer"]=b.stripe_customer_id
