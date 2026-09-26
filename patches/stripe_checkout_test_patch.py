@@ -5,7 +5,7 @@ old='return render(request,"business/plan.html",{"user":user,"organization":org,
 new='''test_billing=bool(settings.stripe_secret_key.startswith("sk_test_"))
  allowed_checkout=(not test_billing) or getattr(org,"slug","")=="linopo"
  price_ready={"monthly":bool(settings.stripe_secret_key and settings.stripe_price_monthly and allowed_checkout),"semiannual":bool(settings.stripe_secret_key and settings.stripe_price_semiannual and allowed_checkout),"annual":bool(settings.stripe_secret_key and settings.stripe_price_annual and allowed_checkout)}
- return render(request,"business/plan.html",{"user":user,"organization":org,"billing":b,"billing_notice":billing_notice(b),"billing_ready":any(price_ready.values()),"price_ready":price_ready,"test_billing":test_billing and allowed_checkout})'''
+ csrf_value=request.session.get("csrf_token") or request.session.get("csrf") or ""\n return render(request,"business/plan.html",{"user":user,"organization":org,"billing":b,"billing_notice":billing_notice(b),"billing_ready":any(price_ready.values()),"price_ready":price_ready,"test_billing":test_billing and allowed_checkout,"csrf":csrf_value})'''
 if old not in s: raise SystemExit("plan context anchor missing")
 s=s.replace(old,new,1)
 old2='if not settings.stripe_billing_ready:return RedirectResponse("/negocio/plan?message=Pagos+automáticos+en+preparación",status_code=303)\n b=get_billing(db,org);stripe.api_key=settings.stripe_secret_key\n prices={"monthly":settings.stripe_price_monthly,"semiannual":settings.stripe_price_semiannual,"annual":settings.stripe_price_annual}'
