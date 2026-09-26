@@ -50,6 +50,7 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/control_center_patch.py \
     && python /bootstrap/patches/plan_templates_patch.py \
     && python /bootstrap/patches/stripe_webhook_fix.py \
+    && python /bootstrap/patches/stripe_period_ui_fix.py \
     && python /bootstrap/patches/entitlement_ui_patch.py \
     && python /bootstrap/patches/i18n_public_patch.py
 
