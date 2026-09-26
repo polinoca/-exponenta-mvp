@@ -41,7 +41,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/landing_commercial_patch.py \
     && python /bootstrap/patches/panel_brand_patch.py \
     && python /bootstrap/patches/billing_patch.py \
-    && python /bootstrap/patches/billing_runtime_fix.py \
+    && python /bootstrap/patches/billing_runtime_fix.py \ \
+    && python /bootstrap/patches/stripe_pause_patch.py
     && python /bootstrap/patches/control_center_patch.py \
     && python /bootstrap/patches/plan_templates_patch.py \
     && python /bootstrap/patches/entitlement_ui_patch.py \
