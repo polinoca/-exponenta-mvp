@@ -34,6 +34,7 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
    return RedirectResponse("/negocio/plan?message=Este+es+tu+plan+actual",status_code=303)
   try:
    sub=stripe.Subscription.retrieve(b.stripe_subscription_id,expand=["latest_invoice"])
+   sub=sub.to_dict_recursive() if hasattr(sub,"to_dict_recursive") else sub.to_dict() if hasattr(sub,"to_dict") else sub
    items=((sub.get("items") or {}).get("data") or [])
    if not items:
     return RedirectResponse("/negocio/plan?message=No+se+pudo+identificar+tu+suscripcion",status_code=303)
@@ -44,11 +45,13 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
     metadata={"organization_id":str(org.id),"interval":interval},
     cancel_at_period_end=False,
    )
+   updated=updated.to_dict_recursive() if hasattr(updated,"to_dict_recursive") else updated.to_dict() if hasattr(updated,"to_dict") else updated
    pending=updated.get("pending_update")
    invoice=updated.get("latest_invoice")
    if pending:
     if isinstance(invoice,str):
      invoice=stripe.Invoice.retrieve(invoice)
+     invoice=invoice.to_dict_recursive() if hasattr(invoice,"to_dict_recursive") else invoice.to_dict() if hasattr(invoice,"to_dict") else invoice
     pay_url=(invoice or {}).get("hosted_invoice_url") if invoice else None
     if pay_url:
      return RedirectResponse(pay_url,status_code=303)
