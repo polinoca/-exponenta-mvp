@@ -51,7 +51,7 @@ _PASSWORD_RESET_HASHER = PasswordHasher()
 def _reset_mail_configured() -> bool:
     return bool(
         os.getenv("SMTP_HOST", "").strip()
-        and os.getenv("SMTP_FROM", "Wordpress@exponenta.mx").strip()
+        and os.getenv("SMTP_FROM", "team@exponenta.mx").strip()
         and os.getenv("SMTP_USERNAME", "").strip()
         and os.getenv("SMTP_PASSWORD", "").strip()
     )
@@ -100,7 +100,7 @@ def _send_password_reset_email(destination: str, token: str) -> None:
     port = int(os.getenv("SMTP_PORT", "587").strip() or "587")
     username = os.getenv("SMTP_USERNAME", "").strip()
     password = os.getenv("SMTP_PASSWORD", "").strip()
-    sender = os.getenv("SMTP_FROM", "Wordpress@exponenta.mx").strip()
+    sender = os.getenv("SMTP_FROM", "team@exponenta.mx").strip()
     reset_url = settings.app_base_url.rstrip("/") + "/restablecer-contrasena?token=" + token
     message = EmailMessage()
     message["Subject"] = "Restablece tu acceso a Exponenta"
