@@ -74,7 +74,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/control_center_csrf_fix.py \
     && python /bootstrap/patches/control_center_status_colors.py \
     && python /bootstrap/patches/control_center_high_contrast_toggle.py \
-    && python /bootstrap/patches/admin_password_reset_csrf_fix.py
+    && python /bootstrap/patches/admin_password_reset_csrf_fix.py \
+    && python /bootstrap/patches/admin_password_reset_ux_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
