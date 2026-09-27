@@ -6,10 +6,24 @@ s=t.read_text(encoding="utf-8")
 
 # Legacy admin page: keep its data markup, add a direct stylesheet hook and scoped class.
 if "xp-admin-loyalty-v2" not in s:
-    if "<body" in s:
-        s=s.replace("<body", '<body class="xp-app-shell xp-admin-loyalty-v2"', 1)
+    # This template is a standalone legacy fragment with no base.html, so it
+    # never loads /static/app.css. Inject the stylesheet explicitly.
+    link='<link rel="stylesheet" href="/static/app.css?v=20260927-loyalty2">'
+    if "<head" in s:
+        pos=s.find(">",s.find("<head"))+1
+        s=s[:pos]+link+s[pos:]
     else:
-        # It may be a fragment included by a legacy admin renderer.
+        s=link+s
+    if "<body" in s:
+        tag_start=s.find("<body")
+        tag_end=s.find(">",tag_start)
+        old=s[tag_start:tag_end+1]
+        if "class=" in old:
+            new=old.replace('class="','class="xp-app-shell xp-admin-loyalty-v2 ',1)
+        else:
+            new=old[:-1]+' class="xp-app-shell xp-admin-loyalty-v2">'
+        s=s[:tag_start]+new+s[tag_end+1:]
+    else:
         s='<div class="xp-app-shell xp-admin-loyalty-v2">'+s+"</div>"
     t.write_text(s,encoding="utf-8")
 
