@@ -1,1 +1,1 @@
-print("Password reset UX retry enabled")\n
+print("Password reset UX retry enabled")
