@@ -315,4 +315,5 @@ if "EXPONENTA FORGOT PASSWORD PLACEMENT V2" not in styles:
 .xp-forgot-password{display:block!important;width:100%!important;order:99;margin:2px 0 0!important;text-align:center!important;font-size:.8rem!important;font-weight:850!important;line-height:1.25!important}.xp-forgot-password a{display:inline-flex!important;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid #dcc8bb;border-radius:12px;background:#fff8f3;color:#754127!important;text-decoration:none!important}.xp-forgot-password a:hover{background:#f7e9df}@media(max-width:720px){.xp-forgot-password{margin:0!important;font-size:.86rem!important}.xp-forgot-password a{min-height:46px;padding:0 18px}}
 '''
 css.write_text(styles, encoding="utf-8")
-# Railway source sync trigger: SMTP SSL recovery patch\nprint("Password recovery flow installed")
+# Exponenta password-recovery patch loaded.
+print("Password recovery flow installed")
