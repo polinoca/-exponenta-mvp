@@ -173,7 +173,7 @@ def password_recovery_submit(email: str = Form(""), db: Session = Depends(get_db
                     _send_password_reset_email(user["email"], token)
                 except Exception as exc:
                     # Do not expose mail-provider details to visitors.
-                    print("PASSWORD_RESET_EMAIL_ERROR", type(exc).__name__, flush=True)
+                    print("PASSWORD_RESET_EMAIL_ERROR", type(exc).__name__, str(exc)[:180], flush=True)
     return RedirectResponse("/recuperar-acceso?enviado=1", status_code=303)
 
 
