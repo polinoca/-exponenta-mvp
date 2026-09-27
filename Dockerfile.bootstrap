@@ -86,7 +86,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/admin_loyalty_visual_fix.py \
     && python /bootstrap/patches/admin_sidebar_button_contrast.py \
     && python /bootstrap/patches/business_brand_experience.py \
-    && python /bootstrap/patches/superadmin_icon_navigation.py
+    && python /bootstrap/patches/superadmin_icon_navigation.py \
+    && python /bootstrap/patches/operation_flow_guide.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
