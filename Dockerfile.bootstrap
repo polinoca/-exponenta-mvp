@@ -66,7 +66,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/google_wallet_helper_signature_fix.py \
     && python /bootstrap/patches/google_wallet_live_sync_patch.py \
     && python /bootstrap/patches/qr_nfc_operator_compat_patch.py \
-    && python /bootstrap/patches/universal_password_toggle_patch.py
+    && python /bootstrap/patches/universal_password_toggle_patch.py \
+    && python /bootstrap/patches/qr_nfc_session_safety_fix.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
