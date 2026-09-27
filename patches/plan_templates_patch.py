@@ -107,7 +107,7 @@ def admin_apply_plan_template(org_id:int,template_key:str,request:Request,csrf_t
  s=s.replace(route_anchor,route+route_anchor,1)
 
  old='return render(request,"admin/control_business.html",{"user":user,"organization":org,"billing":b,"feature_catalog":FEATURE_CATALOG,"feature_states":states})'
- new='return render(request,"admin/control_business.html",{"user":user,"organization":org,"billing":b,"feature_catalog":FEATURE_CATALOG,"feature_states":states,"plan_templates":PLAN_TEMPLATES})'
+ new='return render(request,"admin/control_business.html",{"user":user,"organization":org,"billing":b,"feature_catalog":FEATURE_CATALOG,"feature_states":states,"plan_templates":PLAN_TEMPLATES,"active_plan_key":next((k for k,v in PLAN_TEMPLATES.items() if v["label"]==b.plan_name),None)})'
  if old not in s: raise SystemExit("control business context missing")
  s=s.replace(old,new,1)
  p.write_text(s)
@@ -115,7 +115,7 @@ def admin_apply_plan_template(org_id:int,template_key:str,request:Request,csrf_t
 t=Path("/app/app/templates/admin/control_business.html");s=t.read_text()
 if "PLANTILLAS DE PLAN" not in s:
  marker='<section class="xp-feature-control">'
- block=r'''<section class="xp-plan-templates"><span class="eyebrow">PLANTILLAS DE PLAN</span><h2>Configura el paquete en un toque.</h2><p>Aplica una base y después enciende o apaga cualquier función para este cliente.</p><div class="xp-template-grid">{% for key,item in plan_templates.items() %}<form method="post" action="/admin/control/{{ organization.id }}/template/{{ key }}"><input type="hidden" name="csrf_token" value="{{ csrf }}"><strong>{{ item.label }}</strong><span>{{ item.description }}</span><button class="btn btn-secondary">Aplicar {{ item.label }}</button></form>{% endfor %}</div></section>'''
+ block=r'''<section class="xp-plan-templates"><span class="eyebrow">PLANTILLAS DE PLAN</span><h2>Configura el paquete en un toque.</h2><p>Aplica una base y después enciende o apaga cualquier función para este cliente.</p><div class="xp-template-grid">{% for key,item in plan_templates.items() %}<form class="{{ 'active-plan' if active_plan_key == key else '' }}" method="post" action="/admin/control/{{ organization.id }}/template/{{ key }}"><input type="hidden" name="csrf_token" value="{{ csrf }}"><strong>{{ item.label }}</strong><span>{{ item.description }}</span><button class="btn {{ 'xp-plan-active-btn' if active_plan_key == key else 'btn-secondary' }}">{{ 'Plan activo' if active_plan_key == key else 'Aplicar ' ~ item.label }}</button></form>{% endfor %}</div></section>'''
  if marker not in s: raise SystemExit("feature section missing")
  s=s.replace(marker,block+marker,1)
  t.write_text(s)
@@ -124,7 +124,7 @@ css=Path("/app/app/static/app.css");s=css.read_text()
 if "EXPONENTA PLAN TEMPLATES V1" not in s:
  s+=r'''
 /* EXPONENTA PLAN TEMPLATES V1 */
-.xp-plan-templates{background:#fff;border:1px solid #e2d7cd;border-radius:22px;padding:20px;margin-top:14px}.xp-plan-templates>p{color:#766b64;font-size:.72rem}.xp-template-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.xp-template-grid form{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #e7ddd4;border-radius:16px;background:#fbf8f5}.xp-template-grid strong{font-size:.85rem}.xp-template-grid span{font-size:.59rem;color:#776c65;line-height:1.4;min-height:50px}.xp-template-grid .btn{margin-top:auto;font-size:.58rem;padding:9px}@media(max-width:900px){.xp-template-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.xp-template-grid{grid-template-columns:1fr}}
+.xp-plan-templates{background:#fff;border:1px solid #e2d7cd;border-radius:22px;padding:20px;margin-top:14px}.xp-plan-templates>p{color:#766b64;font-size:.72rem}.xp-template-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.xp-template-grid form{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #e7ddd4;border-radius:16px;background:#fbf8f5}.xp-template-grid strong{font-size:.85rem}.xp-template-grid span{font-size:.59rem;color:#776c65;line-height:1.4;min-height:50px}.xp-template-grid .btn{margin-top:auto;font-size:.58rem;padding:9px}.xp-template-grid form.active-plan{border:2px solid #9a5a38;background:#f7eee8;box-shadow:0 0 0 2px rgba(154,90,56,.08)}.xp-template-grid form.active-plan strong{color:#7a4026}.xp-plan-active-btn{background:#9a5a38!important;color:#fff!important;border-color:#9a5a38!important;cursor:default}@media(max-width:900px){.xp-template-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.xp-template-grid{grid-template-columns:1fr}}
 '''
  css.write_text(s)
 print("Exponenta Plan Templates V1 installed")
