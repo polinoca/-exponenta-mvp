@@ -4,30 +4,29 @@ import re
 main = Path("/app/app/main.py")
 s = main.read_text()
 
-message = "El destino debe ser una URL http/https válida"
-pattern = re.compile(
-    r'(?P<i>[ \t]+)if not (?P<expr>[^\n]+):\n(?P=i)[ \t]+raise HTTPException\(422, ["\']El destino debe ser una URL http/https válida["\']\)'
-)
-m = pattern.search(s)
+# Patch the shared destination sanitizer instead of one individual endpoint.
+m = re.search(r'def safe_destination\([^\n]*\):\n(?P<body>(?:[ \t]+[^\n]*\n)+)', s)
 if not m:
-    raise SystemExit("campaign destination validation not found")
+    raise SystemExit("safe_destination function not found")
 
-indent = m.group("i")
-expr = m.group("expr")
-var_match = re.search(r'([A-Za-z_]\w*)\.startswith', expr)
-if not var_match:
-    raise SystemExit("campaign destination variable not found")
-v = var_match.group(1)
-
-replacement = (
-    f"{indent}{v} = ({v} or '').strip()\n"
-    f"{indent}if {v} and not {v}.startswith(('http://', 'https://')):\n"
-    f"{indent}    {v} = 'https://' + {v}\n"
-    f"{indent}if not {v}:\n"
-    f"{indent}    return RedirectResponse('/negocio/marketing?campaign_error=destination', status_code=303)"
-)
-s = s[:m.start()] + replacement + s[m.end():]
-main.write_text(s)
+block = m.group(0)
+if "XP_CAMPAIGN_DESTINATION_NORMALIZER" not in block:
+    lines = block.splitlines()
+    indent = "    "
+    inject = [
+        lines[0],
+        indent + "# XP_CAMPAIGN_DESTINATION_NORMALIZER",
+        indent + "value = (value or '').strip()",
+        indent + "if value and not value.startswith(('http://', 'https://')):",
+        indent + "    value = 'https://' + value",
+    ]
+    # Preserve the original sanitizer logic after normalization, but avoid a duplicate
+    # first strip assignment if present.
+    rest = lines[1:]
+    rest = [ln for ln in rest if not re.match(r'\s*value\s*=\s*\(value\s+or\s+[\'\"]{2}\)\.strip\(\)\s*$', ln)]
+    new_block = "\n".join(inject + rest) + "\n"
+    s = s[:m.start()] + new_block + s[m.end():]
+    main.write_text(s)
 
 tpl = Path("/app/app/templates/business/marketing.html")
 if tpl.exists():
@@ -35,16 +34,10 @@ if tpl.exists():
     if "xp-campaign-error" not in t:
         marker = "{% block body %}"
         alert = """{% if request.query_params.get("campaign_error") == "destination" %}
-<div class="xp-campaign-error" role="alert">Agrega un destino para la campaña. Puede ser una página web, un enlace de WhatsApp o Google; si escribes <b>wa.me/...</b> o <b>google.com/...</b>, Exponenta agregará <b>https://</b> automáticamente.</div>
+<div class="xp-campaign-error" role="alert">Agrega un destino válido. Puedes escribir una URL completa o, por ejemplo, <b>wa.me/...</b>; Exponenta agregará <b>https://</b> automáticamente.</div>
 {% endif %}"""
         if marker in t:
             t = t.replace(marker, marker + "\n" + alert, 1)
             tpl.write_text(t)
 
-css = Path("/app/app/static/app.css")
-c = css.read_text()
-if ".xp-campaign-error" not in c:
-    c += "\n.xp-campaign-error{width:min(1180px,calc(100% - 28px));margin:16px auto;padding:13px 15px;border:1px solid #efc0b8;border-radius:14px;background:#fff2ef;color:#8c2f20;font-size:.78rem;line-height:1.45}.xp-campaign-error b{color:#6f2218}\n"
-    css.write_text(c)
-
-print("campaign destination UX fixed")
+print("shared destination URL normalizer applied")
