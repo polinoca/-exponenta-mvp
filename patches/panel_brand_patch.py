@@ -908,3 +908,16 @@ css += r"""
 """
 css_path.write_text(css, encoding="utf-8")
 print("Exponenta internal panel visual system installed")
+
+# Improve Superadmin sidebar contrast without changing layout.
+css_path=Path("/app/app/static/app.css")
+css=css_path.read_text(encoding="utf-8")
+if "/* XP ADMIN SIDEBAR CONTRAST V2 */" not in css:
+ css += r'''
+/* XP ADMIN SIDEBAR CONTRAST V2 */
+.xp-admin-sidebar a,.admin-sidebar a,.sidebar a{color:rgba(255,255,255,.78)!important;font-weight:760!important;opacity:1!important;transition:background .18s ease,color .18s ease,transform .18s ease}
+.xp-admin-sidebar a:hover,.admin-sidebar a:hover,.sidebar a:hover{color:#fff!important;background:rgba(255,255,255,.09)!important}
+.xp-admin-sidebar a.active,.admin-sidebar a.active,.sidebar a.active,.xp-admin-sidebar [aria-current="page"],.admin-sidebar [aria-current="page"],.sidebar [aria-current="page"]{color:#fff!important;background:rgba(255,255,255,.13)!important;font-weight:900!important}
+.xp-admin-sidebar .soon,.admin-sidebar .soon,.sidebar .soon,.xp-admin-sidebar .xp-soon,.admin-sidebar .xp-soon,.sidebar .xp-soon{color:#d7b69f!important;opacity:1!important;font-size:.52rem!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+'''
+ css_path.write_text(css,encoding="utf-8")
