@@ -25,6 +25,10 @@ if "xp-admin-loyalty-v2" not in s:
         s=s[:tag_start]+new+s[tag_end+1:]
     else:
         s='<div class="xp-app-shell xp-admin-loyalty-v2">'+s+"</div>"
+    # Clean up legacy Wallet nav label.
+    s=s.replace("Wallet realPRÓXIMO", 'Wallet <span class="xp-soon">Próximo</span>')
+    s=s.replace("Wallet real próximo", 'Wallet <span class="xp-soon">Próximo</span>')
+    s=s.replace("Wallet real", 'Wallet <span class="xp-soon">Próximo</span>')
     t.write_text(s,encoding="utf-8")
 
 css=Path("/app/app/static/app.css");c=css.read_text(encoding="utf-8")
@@ -36,7 +40,7 @@ if "ADMIN LOYALTY V2" not in c:
 .xp-admin-loyalty-v2 h1{font-size:clamp(2.3rem,7vw,3.7rem);letter-spacing:-.05em;line-height:.95;margin:24px 0 18px}.xp-admin-loyalty-v2 h2,.xp-admin-loyalty-v2 h3{letter-spacing:-.03em}
 .xp-admin-loyalty-v2 nav{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}.xp-admin-loyalty-v2 nav a{display:inline-flex;align-items:center;min-height:38px;padding:0 13px;border:1px solid #ded8ce;border-radius:999px;background:#fff}
 .xp-admin-loyalty-v2 table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid #ded8ce;border-radius:18px;overflow:hidden;margin-top:18px}.xp-admin-loyalty-v2 th{background:#f2eee8;text-transform:uppercase;letter-spacing:.07em;font-size:.68rem;color:#827a71;text-align:left}.xp-admin-loyalty-v2 th,.xp-admin-loyalty-v2 td{padding:13px 14px;border-bottom:1px solid #ebe5dc}.xp-admin-loyalty-v2 tr:last-child td{border-bottom:0}.xp-admin-loyalty-v2 td{font-size:.84rem}
-.xp-admin-loyalty-v2 button{min-height:40px;border:1px solid #ded8ce;border-radius:999px;background:#fff;padding:0 14px;font-weight:800}
+.xp-admin-loyalty-v2 .xp-soon{display:inline-flex;margin-left:5px;padding:2px 6px;border-radius:999px;background:#9a5a38;color:#fff;font-size:.48rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;vertical-align:middle}.xp-admin-loyalty-v2 button{min-height:40px;border:1px solid #ded8ce;border-radius:999px;background:#fff;padding:0 14px;font-weight:800}
 @media(max-width:720px){.xp-admin-loyalty-v2{padding:16px!important}.xp-admin-loyalty-v2 table{display:block;overflow-x:auto;white-space:nowrap}}
 '''
  css.write_text(c,encoding="utf-8")
