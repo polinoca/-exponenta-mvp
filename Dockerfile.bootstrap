@@ -60,7 +60,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/password_recovery_patch.py \
     && python /bootstrap/patches/admin_password_reset_patch.py \
     && python /bootstrap/patches/mobile_ux_final_patch.py \
-    && python /bootstrap/patches/google_wallet_test_mode_patch.py
+    && python /bootstrap/patches/google_wallet_test_mode_patch.py \
+    && python /bootstrap/patches/google_wallet_test_accounts_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
