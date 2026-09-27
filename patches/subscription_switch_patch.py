@@ -19,7 +19,7 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
  if not origin and not referer.startswith(base+"/"): raise HTTPException(403,"Solicitud no válida")
  if interval not in {"monthly","annual"}: raise HTTPException(422,"Periodo inválido")
  prices={"monthly":settings.stripe_price_monthly,"annual":settings.stripe_price_annual}
- if settings.stripe_secret_key.startswith("sk_test_") and getattr(org,"slug","")!="linopo":
+ if settings.stripe_secret_key.startswith("sk_test_") and getattr(org,"slug","") not in {"linopo","cafe-exponenta-prueba"}:
   return RedirectResponse("/negocio/plan?message=Pagos+de+prueba+restringidos",status_code=303)
  if not settings.stripe_secret_key or not prices.get(interval):
   return RedirectResponse("/negocio/plan?message=Este+periodo+aun+no+esta+disponible",status_code=303)
