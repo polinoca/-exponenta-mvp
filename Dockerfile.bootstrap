@@ -63,7 +63,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/google_wallet_test_mode_patch.py \
     && python /bootstrap/patches/google_wallet_test_accounts_patch.py \
     && python /bootstrap/patches/google_wallet_test_accounts_fix.py \
-    && python /bootstrap/patches/google_wallet_helper_signature_fix.py
+    && python /bootstrap/patches/google_wallet_helper_signature_fix.py \
+    && python /bootstrap/patches/google_wallet_live_sync_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
