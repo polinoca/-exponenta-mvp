@@ -179,7 +179,7 @@ scan_anchor = '''    if program.organization_id != organization.id:
         raise HTTPException(403, "Esta membresía pertenece a otro negocio.")
     if membership.stamps >= program.stamps_required:
 '''
-if scan_anchor in s and "source="qr_or_nfc_points"" not in s:
+if scan_anchor in s and 'source=\"qr_or_nfc_points\"' not in s:
     scan_insert = '''    if program.organization_id != organization.id:
         raise HTTPException(403, "Esta membresía pertenece a otro negocio.")
     if getattr(program.mechanic, "value", program.mechanic) == "points":
