@@ -38,16 +38,21 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
    items=((sub.get("items") or {}).get("data") or [])
    if not items:
     return RedirectResponse("/negocio/plan?message=No+se+pudo+identificar+tu+suscripcion",status_code=303)
-   updated=stripe.Subscription.modify(
-    b.stripe_subscription_id,
-    items=[{"id":items[0]["id"],"price":prices[interval],"quantity":1}],
-    proration_behavior="always_invoice",
-    payment_behavior="pending_if_incomplete",
-    billing_cycle_anchor="now",
-    metadata={"organization_id":str(org.id),"interval":interval},
-    cancel_at_period_end=False,
-    expand=["latest_invoice.payment_intent"],
-   )
+   # A trial has no payable monthly time to credit. End it only when the
+   # customer explicitly upgrades, so Stripe creates the annual invoice now.
+   # For an already paid monthly subscription we preserve the normal proration.
+   change={
+    "items":[{"id":items[0]["id"],"price":prices[interval],"quantity":1}],
+    "proration_behavior":"always_invoice",
+    "payment_behavior":"pending_if_incomplete",
+    "billing_cycle_anchor":"now",
+    "metadata":{"organization_id":str(org.id),"interval":interval},
+    "cancel_at_period_end":False,
+    "expand":["latest_invoice.payment_intent"],
+   }
+   if sub.get("status")=="trialing":
+    change["trial_end"]="now"
+   updated=stripe.Subscription.modify(b.stripe_subscription_id,**change)
    updated=updated.to_dict_recursive() if hasattr(updated,"to_dict_recursive") else updated.to_dict() if hasattr(updated,"to_dict") else updated
    pending=updated.get("pending_update")
    invoice=updated.get("latest_invoice")
