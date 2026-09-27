@@ -93,4 +93,9 @@ if marker not in css:
 }
 """
     css_path.write_text(css, encoding="utf-8")
+base_path = Path("/app/app/templates/base.html")
+if base_path.exists():
+    base_html = base_path.read_text(encoding="utf-8")
+    base_html = base_html.replace("/static/app.css?v=20260925-10", "/static/app.css?v=20260927-mobile-1")
+    base_path.write_text(base_html, encoding="utf-8")
 print("Mobile UX final styles installed")
