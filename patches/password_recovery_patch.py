@@ -97,10 +97,11 @@ def _reset_token_record(db: Session, token: str):
 
 def _send_password_reset_email(destination: str, token: str) -> None:
     host = os.getenv("SMTP_HOST", "").strip()
-    port = int(os.getenv("SMTP_PORT", "587").strip() or "587")
+    port = int(os.getenv("SMTP_PORT", "465").strip() or "465")
     username = os.getenv("SMTP_USERNAME", "").strip()
     password = os.getenv("SMTP_PASSWORD", "").strip()
     sender = os.getenv("SMTP_FROM", "team@exponenta.mx").strip()
+    use_ssl = os.getenv("SMTP_USE_SSL", "true").lower() not in {"0", "false", "no"}
     reset_url = settings.app_base_url.rstrip("/") + "/restablecer-contrasena?token=" + token
     message = EmailMessage()
     message["Subject"] = "Restablece tu acceso a Exponenta"
@@ -112,8 +113,9 @@ def _send_password_reset_email(destination: str, token: str) -> None:
         "El enlace vence en 30 minutos y solo puede usarse una vez. "
         "Si no solicitaste este cambio, puedes ignorar este correo."
     )
-    with smtplib.SMTP(host, port, timeout=15) as smtp:
-        if os.getenv("SMTP_USE_TLS", "true").lower() not in {"0", "false", "no"}:
+    smtp_client = smtplib.SMTP_SSL if use_ssl else smtplib.SMTP
+    with smtp_client(host, port, timeout=15) as smtp:
+        if not use_ssl and os.getenv("SMTP_USE_TLS", "true").lower() not in {"0", "false", "no"}:
             smtp.starttls()
         smtp.login(username, password)
         smtp.send_message(message)
