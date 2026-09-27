@@ -55,7 +55,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/pro_pricing_ui_patch.py \
     && python /bootstrap/patches/entitlement_ui_patch.py \
     && python /bootstrap/patches/i18n_public_patch.py \
-    && python /bootstrap/patches/subscription_switch_patch.py
+    && python /bootstrap/patches/subscription_switch_patch.py \
+    && python /bootstrap/patches/auth_ux_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
