@@ -81,7 +81,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/business_logo_upload_format_fix.py \
     && python /bootstrap/patches/business_logo_upload_retry.py \
     && python /bootstrap/patches/business_logo_cache_bust.py \
-    && python /bootstrap/patches/campaign_destination_ux_fix.py
+    && python /bootstrap/patches/campaign_destination_ux_fix.py \
+    && python /bootstrap/patches/admin_loyalty_visual_fix.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
