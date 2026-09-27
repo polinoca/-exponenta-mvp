@@ -123,7 +123,22 @@ s = s.replace(validation, replacement, 1)
 assignment = '    program.name = name.strip() or f"Club {org.name}"\n    program.stamps_required = stamps_required'
 if assignment not in s:
     raise SystemExit("program assignment anchor missing")
-s = s.replace(assignment, '    program.name = name.strip() or f"Club {org.name}"\n    program.mechanic = mechanic\n    program.stamps_required = stamps_required', 1)
+guarded_assignment = '''    current_mechanic = getattr(program.mechanic, "value", program.mechanic)
+    if current_mechanic != mechanic:
+        member_count = db.scalar(
+            select(func.count()).select_from(LoyaltyMembership).where(
+                LoyaltyMembership.program_id == program.id
+            )
+        ) or 0
+        if member_count:
+            return RedirectResponse(
+                "/negocio/lealtad?message=No+cambies+un+club+con+clientes.+Crea+un+nuevo+negocio+o+programa+para+puntos.",
+                status_code=303,
+            )
+    program.name = name.strip() or f"Club {org.name}"
+    program.mechanic = mechanic
+    program.stamps_required = stamps_required'''
+s = s.replace(assignment, guarded_assignment, 1)
 
 # Provide an audited signed adjustment endpoint for point programs.
 route_anchor = '@app.get("/negocio/cliente/{token}", response_class=HTMLResponse)'
