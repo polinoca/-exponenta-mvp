@@ -68,7 +68,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/qr_nfc_operator_compat_patch.py \
     && python /bootstrap/patches/universal_password_toggle_patch.py \
     && python /bootstrap/patches/qr_nfc_session_safety_fix.py \
-    && python /bootstrap/patches/remove_qr_nfc_middleware_patch.py
+    && python /bootstrap/patches/remove_qr_nfc_middleware_patch.py \
+    && python /bootstrap/patches/diagnose_admin_auth_patch.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
