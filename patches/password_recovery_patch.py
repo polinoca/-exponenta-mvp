@@ -245,7 +245,17 @@ if "EXPONENTA PASSWORD RECOVERY LINK V1" not in template:
     template = template.replace(
         marker,
         '''<p class="xp-forgot-password"><a href="/recuperar-acceso">¿Olvidaste tu contraseña?</a></p>
-<!-- EXPONENTA PASSWORD RECOVERY LINK V1 -->
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  const forgot=document.querySelector(".xp-forgot-password");
+  const form=document.querySelector('form[action="/login"]')||document.querySelector("form");
+  if(!forgot||!form)return;
+  const submit=form.querySelector('button[type="submit"],input[type="submit"]');
+  if(submit)submit.insertAdjacentElement("afterend",forgot);
+  else form.appendChild(forgot);
+});
+</script>
+<!-- EXPONENTA PASSWORD RECOVERY LINK V2 -->
 ''' + marker,
         1,
     )
@@ -298,6 +308,11 @@ if "EXPONENTA PASSWORD RECOVERY V1" not in styles:
     styles += r'''
 /* EXPONENTA PASSWORD RECOVERY V1 */
 .xp-forgot-password{margin:4px 0 0;text-align:right;font-size:.78rem;font-weight:800}.xp-forgot-password a{color:#754127;text-decoration:none}.xp-auth-page{min-height:70vh;display:grid;place-items:center;padding:38px 18px}.xp-auth-card{width:min(100%,500px);padding:28px;border:1px solid #e2d8cf;border-radius:22px;background:#fff;box-shadow:0 18px 42px rgba(73,42,24,.08)}.xp-auth-card h1{margin:6px 0 8px;letter-spacing:-.045em}.xp-auth-card>p{color:#6f655d;line-height:1.55}.xp-auth-back{display:inline-block;margin-bottom:22px;color:#754127;text-decoration:none;font-size:.76rem;font-weight:850}.xp-auth-form{display:grid;gap:14px;margin-top:20px}.xp-auth-form label{display:grid;gap:6px;font-size:.76rem;font-weight:850;color:#594d45}.xp-auth-form input{min-height:46px;padding:0 12px;border:1px solid #d9cec4;border-radius:11px;font:inherit}.xp-auth-message{margin:17px 0 0;padding:12px 13px;border-radius:12px;font-size:.78rem;line-height:1.45}.xp-auth-message.success{background:#e8f3ea;color:#285d38}.xp-auth-message.warning{background:#f7ead9;color:#754d1e}
+'''
+if "EXPONENTA FORGOT PASSWORD PLACEMENT V2" not in styles:
+    styles += r'''
+/* EXPONENTA FORGOT PASSWORD PLACEMENT V2 */
+.xp-forgot-password{display:block!important;width:100%!important;order:99;margin:2px 0 0!important;text-align:center!important;font-size:.8rem!important;font-weight:850!important;line-height:1.25!important}.xp-forgot-password a{display:inline-flex!important;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid #dcc8bb;border-radius:12px;background:#fff8f3;color:#754127!important;text-decoration:none!important}.xp-forgot-password a:hover{background:#f7e9df}@media(max-width:720px){.xp-forgot-password{margin:0!important;font-size:.86rem!important}.xp-forgot-password a{min-height:46px;padding:0 18px}}
 '''
 css.write_text(styles, encoding="utf-8")
 # Railway source sync trigger: SMTP SSL recovery patch\nprint("Password recovery flow installed")
