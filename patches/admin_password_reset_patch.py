@@ -3,21 +3,15 @@ from pathlib import Path
 main=Path("/app/app/main.py")
 s=main.read_text(encoding="utf-8")
 if "EXPONENTA ADMIN PASSWORD RESET V1" not in s:
-    old='''    return render(request,"admin/control_business.html",{"user":user,"organization":org,"billing":b,"feature_catalog":FEATURE_CATALOG,"feature_states":states})'''
-    new='''    users = db.scalars(select(User).where(User.organization_id == org.id).order_by(User.email)).all()
-    return render(request,"admin/control_business.html",{"user":user,"organization":org,"billing":b,"feature_catalog":FEATURE_CATALOG,"feature_states":states,"organization_users":users,"password_reset_message":request.query_params.get("password_reset") == "1"})'''
-    if old not in s:
-        raise SystemExit("Control business template context anchor missing")
-    s=s.replace(old,new,1)
     anchor='''@app.post("/admin/control/{org_id}/feature/{feature_key}")'''
     if anchor not in s:
         raise SystemExit("Control password route anchor missing")
     route=r'''# EXPONENTA ADMIN PASSWORD RESET V1
-@app.post("/admin/control/{org_id}/usuario/{user_id}/restablecer-contrasena")
+@app.post("/admin/control/{org_id}/usuario/restablecer-contrasena")
 def admin_reset_business_password(
     org_id: int,
-    user_id: int,
     request: Request,
+    target_email: str = Form(""),
     temporary_password: str = Form(""),
     password_confirmation: str = Form(""),
     csrf_token: str = Form(...),
@@ -26,8 +20,8 @@ def admin_reset_business_password(
     control_superadmin(request, db)
     verify_csrf(request, csrf_token)
     org = db.get(Organization, org_id)
-    target = db.get(User, user_id)
-    if not org or not target or getattr(target, "organization_id", None) != org_id:
+    target = db.scalar(select(User).where(User.organization_id == org_id, User.email == target_email.strip().lower()))
+    if not org or not target:
         raise HTTPException(404, "Usuario no encontrado")
     if len(temporary_password) < 10:
         raise HTTPException(422, "La contraseña temporal debe tener al menos 10 caracteres.")
@@ -36,10 +30,7 @@ def admin_reset_business_password(
     setattr(target, _PASSWORD_RESET_PASSWORD_FIELD, _PASSWORD_RESET_HASHER.hash(temporary_password))
     db.add(target)
     db.commit()
-    return RedirectResponse(
-        f"/admin/control/{org_id}?password_reset=1",
-        status_code=303,
-    )
+    return RedirectResponse(f"/admin/control/{org_id}?password_reset=1", status_code=303)
 
 '''
     s=s.replace(anchor,route+anchor,1)
@@ -57,20 +48,14 @@ if "ADMIN PASSWORD RESET V1" not in t:
   <h2>Restablecer contraseña de un usuario.</h2>
   <p>La contraseña anterior no se muestra ni se conserva. Crea una temporal y compártela sólo después de verificar al dueño del negocio.</p>
   {% if password_reset_message %}<div class="xp-auth-message success">Contraseña temporal actualizada. Compártela de forma segura y pide que la cambie al ingresar.</div>{% endif %}
-  {% if organization_users %}
-  <form method="post" action="/admin/control/{{ organization.id }}/usuario/0/restablecer-contrasena" id="xp-admin-password-form">
+  <form method="post" action="/admin/control/{{ organization.id }}/usuario/restablecer-contrasena">
     <input type="hidden" name="csrf_token" value="{{ csrf }}">
-    <label>Usuario<select name="user_id" id="xp-admin-reset-user">{% for account in organization_users %}<option value="{{ account.id }}">{{ account.email }}</option>{% endfor %}</select></label>
+    <label>Correo del usuario<input type="email" name="target_email" autocomplete="email" required></label>
     <label>Contraseña temporal<input type="password" name="temporary_password" minlength="10" autocomplete="new-password" required></label>
     <label>Confirmar contraseña temporal<input type="password" name="password_confirmation" minlength="10" autocomplete="new-password" required></label>
     <button class="btn btn-primary" type="submit">Guardar contraseña temporal</button>
   </form>
-  <script>
-  document.getElementById("xp-admin-password-form").addEventListener("submit",function(){
-    this.action="/admin/control/{{ organization.id }}/usuario/"+document.getElementById("xp-admin-reset-user").value+"/restablecer-contrasena";
-  });
-  </script>
-  {% else %}<p class="xp-locked">Este negocio todavía no tiene usuarios administradores.</p>{% endif %}
+
 </section>
 '''
     t=t.replace(anchor,block+anchor,1)
