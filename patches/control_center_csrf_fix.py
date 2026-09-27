@@ -12,7 +12,7 @@ new='''def admin_toggle_feature(org_id:int,feature_key:str,request:Request,enabl
  control_superadmin(request,db)
  origin=(request.headers.get("origin") or "").rstrip("/")
  referer=request.headers.get("referer") or ""
- base=settings.app_base_url.rstrip("/")
+ base=str(request.base_url).rstrip("/")
  if origin and origin != base: raise HTTPException(403,"Solicitud no válida")
  if not origin and not referer.startswith(base+"/"): raise HTTPException(403,"Solicitud no válida")
  if csrf_token: verify_csrf(request,csrf_token)'''
@@ -25,7 +25,7 @@ new2='''def admin_apply_plan_template(org_id:int,template_key:str,request:Reques
  control_superadmin(request,db)
  origin=(request.headers.get("origin") or "").rstrip("/")
  referer=request.headers.get("referer") or ""
- base=settings.app_base_url.rstrip("/")
+ base=str(request.base_url).rstrip("/")
  if origin and origin != base: raise HTTPException(403,"Solicitud no válida")
  if not origin and not referer.startswith(base+"/"): raise HTTPException(403,"Solicitud no válida")
  if csrf_token: verify_csrf(request,csrf_token)'''
@@ -37,7 +37,7 @@ new3='''def admin_set_access(org_id:int,request:Request,access_type:str=Form(...
  control_superadmin(request,db)
  origin=(request.headers.get("origin") or "").rstrip("/")
  referer=request.headers.get("referer") or ""
- base=settings.app_base_url.rstrip("/")
+ base=str(request.base_url).rstrip("/")
  if origin and origin != base: raise HTTPException(403,"Solicitud no válida")
  if not origin and not referer.startswith(base+"/"): raise HTTPException(403,"Solicitud no válida")
  if csrf_token: verify_csrf(request,csrf_token)
