@@ -51,5 +51,5 @@ if "/* XP SUPERADMIN NAV V3 */" not in c:
 .xp-app-shell .app-shell .sidebar .sidebar-user a,.xp-app-shell .app-shell .sidebar .user-block a{color:#696e7e!important;background:transparent!important;border:0!important;padding:7px 0!important}
 @media(max-width:800px){.xp-app-shell .app-shell .sidebar{width:100%!important;border-right:0!important;border-bottom:1px solid #e8e9ee!important;padding:16px!important}.xp-app-shell .app-shell .sidebar .brand{margin:0 8px 14px!important}.xp-app-shell .app-shell .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.xp-app-shell .app-shell .sidebar:after{display:none}}
 '''
- css.write_text(c,encoding="utf-8")
+    css.write_text(c,encoding="utf-8")
 print("Superadmin icon navigation installed")
