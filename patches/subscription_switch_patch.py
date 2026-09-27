@@ -33,7 +33,7 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
   if b.billing_interval==interval and b.status=="active":
    return RedirectResponse("/negocio/plan?message=Este+es+tu+plan+actual",status_code=303)
   try:
-   sub=stripe.Subscription.retrieve(b.stripe_subscription_id,expand=["latest_invoice"])
+   sub=stripe.Subscription.retrieve(b.stripe_subscription_id,expand=["latest_invoice.payment_intent"])
    sub=sub.to_dict_recursive() if hasattr(sub,"to_dict_recursive") else sub.to_dict() if hasattr(sub,"to_dict") else sub
    items=((sub.get("items") or {}).get("data") or [])
    if not items:
@@ -42,20 +42,36 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
     b.stripe_subscription_id,
     items=[{"id":items[0]["id"],"price":prices[interval],"quantity":1}],
     proration_behavior="always_invoice",
+    payment_behavior="pending_if_incomplete",
+    billing_cycle_anchor="now",
     metadata={"organization_id":str(org.id),"interval":interval},
     cancel_at_period_end=False,
+    expand=["latest_invoice.payment_intent"],
    )
    updated=updated.to_dict_recursive() if hasattr(updated,"to_dict_recursive") else updated.to_dict() if hasattr(updated,"to_dict") else updated
    pending=updated.get("pending_update")
    invoice=updated.get("latest_invoice")
-   if pending:
-    if isinstance(invoice,str):
-     invoice=stripe.Invoice.retrieve(invoice)
-     invoice=invoice.to_dict_recursive() if hasattr(invoice,"to_dict_recursive") else invoice.to_dict() if hasattr(invoice,"to_dict") else invoice
-    pay_url=(invoice or {}).get("hosted_invoice_url") if invoice else None
+   if isinstance(invoice,str):
+    invoice=stripe.Invoice.retrieve(invoice,expand=["payment_intent"])
+    invoice=invoice.to_dict_recursive() if hasattr(invoice,"to_dict_recursive") else invoice.to_dict() if hasattr(invoice,"to_dict") else invoice
+   invoice=invoice or {}
+   payment_intent=invoice.get("payment_intent") or {}
+   if isinstance(payment_intent,str):
+    payment_intent=stripe.PaymentIntent.retrieve(payment_intent)
+    payment_intent=payment_intent.to_dict_recursive() if hasattr(payment_intent,"to_dict_recursive") else payment_intent.to_dict() if hasattr(payment_intent,"to_dict") else payment_intent
+   payment_state=(payment_intent or {}).get("status")
+   invoice_state=invoice.get("status")
+   pay_url=invoice.get("hosted_invoice_url")
+   # A pending update has not altered the subscription. Keep Exponenta on the
+   # previous interval until Stripe collects the invoice and emits its webhook.
+   if pending or invoice_state in {"draft","open"} or payment_state in {"requires_action","requires_confirmation","requires_payment_method"}:
     if pay_url:
      return RedirectResponse(pay_url,status_code=303)
-    return RedirectResponse("/negocio/plan?message=El+cambio+esta+pendiente+de+pago",status_code=303)
+    return RedirectResponse("/negocio/plan?message=Completa+el+pago+para+confirmar+el+cambio",status_code=303)
+   if invoice_state and invoice_state not in {"paid","void"}:
+    return RedirectResponse("/negocio/plan?message=El+pago+del+cambio+no+pudo+confirmarse",status_code=303)
+   # Stripe has confirmed the update. This is the only point where the local
+   # account is synchronized; the subscription.updated webhook will reconcile it too.
    b.billing_interval=interval
    b.status=updated.get("status") or b.status
    b.cancel_at_period_end=bool(updated.get("cancel_at_period_end"))
@@ -64,7 +80,7 @@ def billing_checkout(request:Request,interval:str=Form(...),csrf_token:str=Form(
    if pe:
     b.current_period_end=datetime.fromtimestamp(pe,tz=timezone.utc)
    db.add(b);db.commit()
-   return RedirectResponse("/negocio/plan?message=Plan+actualizado+correctamente",status_code=303)
+   return RedirectResponse("/negocio/plan?message=Plan+anual+actualizado+correctamente",status_code=303)
   except Exception as e:
    print("STRIPE_PLAN_SWITCH_ERROR",type(e).__name__,str(e),flush=True)
    return RedirectResponse("/negocio/plan?message=No+se+pudo+actualizar+el+plan.+Intenta+de+nuevo",status_code=303)
