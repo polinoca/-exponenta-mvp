@@ -97,7 +97,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/launch_landing_real_world_visuals.py \
     && python /bootstrap/patches/universal_business_navigation.py \
     && python /bootstrap/patches/business_navigation_failsafe_v2.py \
-    && python /bootstrap/patches/iphone_landing_and_nav_cleanup.py
+    && python /bootstrap/patches/iphone_landing_and_nav_cleanup.py \
+    && python /bootstrap/patches/iphone_notification_stack_v2.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
