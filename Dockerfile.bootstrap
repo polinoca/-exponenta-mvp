@@ -91,7 +91,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/camera_scan_panel.py \
     && python /bootstrap/patches/business_sidebar_navigation.py \
     && python /bootstrap/patches/brand_form_csrf_fix.py \
-    && python /bootstrap/patches/business_navigation_consolidation.py
+    && python /bootstrap/patches/business_navigation_consolidation.py \
+    && python /bootstrap/patches/business_nav_icons_header_cleanup.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
