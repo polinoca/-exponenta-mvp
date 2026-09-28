@@ -103,7 +103,7 @@ def member_recovery_request(slug: str, email: str = Form(...), db: Session = Dep
                 "membership_id": membership.id,
                 "organization_id": organization.id,
                 "email": normalized_email,
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+                "exp": int(datetime.now(timezone.utc).timestamp()) + 900,
             },
             settings.session_secret,
             algorithm="HS256",
