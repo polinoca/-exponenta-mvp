@@ -94,7 +94,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/business_navigation_consolidation.py \
     && python /bootstrap/patches/business_nav_icons_header_cleanup.py \
     && python /bootstrap/patches/launch_value_landing.py \
-    && python /bootstrap/patches/launch_landing_real_world_visuals.py
+    && python /bootstrap/patches/launch_landing_real_world_visuals.py \
+    && python /bootstrap/patches/universal_business_navigation.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
