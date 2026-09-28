@@ -102,7 +102,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/iphone_coffee_composition_v3.py \
     && python /bootstrap/patches/business_residual_cleanup_v4.py \
     && python /bootstrap/patches/apple_wallet_preapproval.py \
-    && python /bootstrap/patches/google_wallet_extra_test_account.py
+    && python /bootstrap/patches/google_wallet_extra_test_account.py \
+    && python /bootstrap/patches/member_card_recovery.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
