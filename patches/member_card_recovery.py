@@ -13,7 +13,7 @@ if route_anchor not in text:
     raise SystemExit("Member wallet route anchor not found")
 
 if 'def member_recovery_form(' not in text:
-    block = r'''
+    block = r"""
 # MEMBER CARD RECOVERY
 # Recovery links are short lived and are only sent to the verified email on the customer record.
 
@@ -21,7 +21,7 @@ def _send_recovery_email(to_email: str, business_name: str, recovery_url: str) -
     if not settings.smtp_host or not settings.smtp_from:
         return False
     message = MIMEText(
-        f"""Hola,
+        f'''Hola,
 
 Solicitaste volver a abrir tu tarjeta de {business_name}.
 
@@ -29,7 +29,7 @@ Usa este enlace desde tu celular:
 {recovery_url}
 
 El enlace vence en 15 minutos. Si no solicitaste esta tarjeta, puedes ignorar este mensaje.
-""",
+''',
         "plain",
         "utf-8",
     )
@@ -54,13 +54,13 @@ El enlace vence en 15 minutos. Si no solicitaste esta tarjeta, puedes ignorar es
 
 def _recovery_page(title: str, body: str, *, status: int = 200) -> HTMLResponse:
     return HTMLResponse(
-        f"""<!doctype html><html lang="es"><meta name="viewport" content="width=device-width,initial-scale=1">
+        f'''<!doctype html><html lang="es"><meta name="viewport" content="width=device-width,initial-scale=1">
         <title>{title} · Exponenta</title>
         <style>
         *{{box-sizing:border-box}} body{{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f7f4f0;color:#1d1713;font-family:Inter,ui-sans-serif,system-ui,sans-serif}}
         main{{width:min(100%,500px);background:#fff;border:1px solid #e6ded5;border-radius:26px;padding:32px;box-shadow:0 18px 45px #3b241314}}
         .eyebrow{{font-size:.72rem;letter-spacing:.15em;font-weight:800;color:#9a6644}}h1{{margin:.4rem 0 .8rem;font-size:2rem;letter-spacing:-.05em}}p{{line-height:1.55;color:#695f58}}label{{display:block;font-size:.9rem;font-weight:750;margin:22px 0 8px}}input{{width:100%;border:1px solid #d9d0c7;border-radius:14px;padding:16px;font-size:1rem}}button,a.button{{display:block;width:100%;border:0;border-radius:14px;padding:16px;background:#1d1713;color:#fff;font:inherit;font-weight:800;text-align:center;text-decoration:none;margin-top:18px}}.note{{font-size:.82rem;color:#837971;margin-top:16px}}
-        </style><main>{body}</main></html>""",
+        </style><main>{body}</main></html>''',
         status_code=status,
     )
 
@@ -136,7 +136,7 @@ def member_recovery_open(recovery_token: str, db: Session = Depends(get_db)):
     return RedirectResponse(f"/m/{membership.wallet_token}", status_code=303)
 
 
-'''
+"""
     text = text.replace(route_anchor, block + route_anchor, 1)
 
 main_path.write_text(text, encoding="utf-8")
