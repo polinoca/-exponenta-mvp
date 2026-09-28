@@ -108,7 +108,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/operator_success_and_wallet_open_test.py \
     && python /bootstrap/patches/simplify_returning_member_journey.py \
     && python /bootstrap/patches/enrollment_header_copy_cleanup.py \
-    && python /bootstrap/patches/wallet_fallback_experience.py
+    && python /bootstrap/patches/wallet_fallback_experience.py \
+    && python /bootstrap/patches/google_wallet_public_site.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
