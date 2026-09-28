@@ -105,7 +105,7 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/google_wallet_extra_test_account.py \
     && python /bootstrap/patches/member_card_recovery.py \
     && python /bootstrap/patches/customer_enrollment_v2.py \
-    && python /bootstrap/patches/operator_success_and_wallet_open_test.py \\
+    && python /bootstrap/patches/operator_success_and_wallet_open_test.py \
     && python /bootstrap/patches/simplify_returning_member_journey.py
 
 WORKDIR /app
