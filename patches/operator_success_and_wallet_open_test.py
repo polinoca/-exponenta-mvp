@@ -17,7 +17,7 @@ js_new = '''if(x.ok){{
   const e=document.createElement("div");e.className="xp-stamp-success";e.innerHTML='<div><div class="mark">✓</div><h2>¡Visita registrada!</h2><p>'+d.message+'</p></div>';
   ["#f7b24a","#f06f63","#83d274","#76b8e4","#f3e6a1"].forEach((c,i)=>{{for(let n=0;n<7;n++){{const q=document.createElement("i");q.className="xp-burst";q.style.background=c;q.style.left=(42+(i*4))+"%";q.style.top="45%";q.style.setProperty("--x",((Math.random()-.5)*620)+"px");q.style.setProperty("--y",((Math.random()-.5)*520)+"px");e.append(q)}}}});document.body.append(e);setTimeout(()=>e.remove(),2100)
 }}else{{b.disabled=false;b.textContent="Agregar sello";r.textContent=d.detail||"No se pudo registrar.";}}'''
-if js_old in main and "xp-stamp-success" not in main:
+if js_old in main and "Visita registrada!" not in main:
     main = main.replace(js_old, js_new, 1)
 main_path.write_text(main, encoding="utf-8")
 
