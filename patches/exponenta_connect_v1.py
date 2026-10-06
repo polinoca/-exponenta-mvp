@@ -227,7 +227,14 @@ async def exponenta_connect_save(
         logo_data = "data:" + mime + ";base64," + xp_base64.b64encode(data).decode("ascii")
     values = {
         "slug": slug, "name": name.strip(), "subtitle": subtitle.strip(),
-        "brand_color": brand_color, "button_border_color": button_border_color, "logo_data": logo_data,
+        "brand_color": brand_color, "button_border_color": button_border_color,
+        "wifi_enabled": 1 if wifi_enabled=="1" else 0,
+        "wifi_ssid": wifi_ssid.strip(),
+        "wifi_note": wifi_note.strip(),
+        "wifi_portal_url": xp_connect_url(wifi_portal_url),
+        "feedback_enabled": 1 if feedback_enabled=="1" else 0,
+        "feedback_prompt": (feedback_prompt.strip() or "¿Cómo fue tu experiencia hoy?"),
+        "logo_data": logo_data,
         "google_url": xp_connect_url(google_url), "whatsapp": xp_connect_whatsapp(whatsapp),
         "instagram_url": xp_connect_instagram(instagram_url), "maps_url": xp_connect_url(maps_url),
         "phone": phone.strip(), "booking_url": xp_connect_url(booking_url),
@@ -239,10 +246,13 @@ async def exponenta_connect_save(
         db.execute(xp_sql_text("DELETE FROM exponenta_connect_profiles WHERE slug=:slug"), {"slug": original_slug})
     db.execute(xp_sql_text("""
         INSERT INTO exponenta_connect_profiles
-        (slug,name,subtitle,brand_color,button_border_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
-        VALUES (:slug,:name,:subtitle,:brand_color,:button_border_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,:active)
+        (slug,name,subtitle,brand_color,button_border_color,wifi_enabled,wifi_ssid,wifi_note,wifi_portal_url,feedback_enabled,feedback_prompt,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
+        VALUES (:slug,:name,:subtitle,:brand_color,:button_border_color,:wifi_enabled,:wifi_ssid,:wifi_note,:wifi_portal_url,:feedback_enabled,:feedback_prompt,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,:active)
         ON CONFLICT (slug) DO UPDATE SET
-        name=EXCLUDED.name, subtitle=EXCLUDED.subtitle, brand_color=EXCLUDED.brand_color, button_border_color=EXCLUDED.button_border_color, logo_data=COALESCE(EXCLUDED.logo_data, exponenta_connect_profiles.logo_data),
+        name=EXCLUDED.name, subtitle=EXCLUDED.subtitle, brand_color=EXCLUDED.brand_color, button_border_color=EXCLUDED.button_border_color,
+        wifi_enabled=EXCLUDED.wifi_enabled,wifi_ssid=EXCLUDED.wifi_ssid,wifi_note=EXCLUDED.wifi_note,wifi_portal_url=EXCLUDED.wifi_portal_url,
+        feedback_enabled=EXCLUDED.feedback_enabled,feedback_prompt=EXCLUDED.feedback_prompt,
+        logo_data=COALESCE(EXCLUDED.logo_data, exponenta_connect_profiles.logo_data),
         google_url=EXCLUDED.google_url, whatsapp=EXCLUDED.whatsapp, instagram_url=EXCLUDED.instagram_url, maps_url=EXCLUDED.maps_url,
         phone=EXCLUDED.phone, booking_url=EXCLUDED.booking_url, website_url=EXCLUDED.website_url, menu_url=EXCLUDED.menu_url,
         facebook_url=EXCLUDED.facebook_url, contact_email=EXCLUDED.contact_email, address=EXCLUDED.address, active=EXCLUDED.active
@@ -393,6 +403,12 @@ adm = Path("/app/app/templates/admin")
       <label class="wide">Descripción corta<input name="subtitle" placeholder="Ej. Podología profesional" value="{{ profile.subtitle if profile else '' }}"></label>
       <label>Color de marca<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else '#6b3b22' }}"></label>\n      <label>Color del marco de botones<input type="color" name="button_border_color" value="{{ profile.button_border_color if profile and profile.button_border_color else '#e4ddd7' }}"></label>
       <label>Logo<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label>
+      <label>Wi-Fi<select name="wifi_enabled"><option value="0" {% if not profile or not profile.wifi_enabled %}selected{% endif %}>No mostrar</option><option value="1" {% if profile and profile.wifi_enabled %}selected{% endif %}>Mostrar</option></select></label>
+      <label>Nombre de red Wi-Fi<input name="wifi_ssid" placeholder="Ej. Linopo Guest" value="{{ profile.wifi_ssid if profile else '' }}"></label>
+      <label class="wide">Nota Wi-Fi<input name="wifi_note" placeholder="Ej. Solicita la clave al personal" value="{{ profile.wifi_note if profile else '' }}"></label>
+      <label class="wide">Portal Wi-Fi (opcional)<input name="wifi_portal_url" placeholder="https://..." value="{{ profile.wifi_portal_url if profile else '' }}"></label>
+      <label>Experiencia privada<select name="feedback_enabled"><option value="0" {% if not profile or not profile.feedback_enabled %}selected{% endif %}>No mostrar</option><option value="1" {% if profile and profile.feedback_enabled %}selected{% endif %}>Mostrar</option></select></label>
+      <label class="wide">Pregunta de experiencia<input name="feedback_prompt" placeholder="¿Cómo fue tu experiencia hoy?" value="{{ profile.feedback_prompt if profile else '¿Cómo fue tu experiencia hoy?' }}"></label>
       <label class="wide">Google reseña<input name="google_url" placeholder="https://..." value="{{ profile.google_url if profile else '' }}"></label>
       <label>WhatsApp<input name="whatsapp" placeholder="3312345678" value="{{ profile.whatsapp if profile else '' }}"></label>
       <label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else '' }}"></label>
