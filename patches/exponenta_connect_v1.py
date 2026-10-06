@@ -594,7 +594,11 @@ async def business_connect_save(
         logo_data = "data:" + mime + ";base64," + xp_base64.b64encode(data).decode("ascii")
     vals={
       "organization_id":org.id,"slug":clean_slug,"name":org.name,"subtitle":subtitle.strip(),
-      "brand_color":brand_color,"button_border_color":button_border_color,"logo_data":logo_data,"google_url":xp_connect_url(google_url),
+      "brand_color":brand_color,"button_border_color":button_border_color,
+      "wifi_enabled":1 if wifi_enabled=="1" else 0,"wifi_ssid":wifi_ssid.strip(),"wifi_note":wifi_note.strip(),
+      "wifi_portal_url":xp_connect_url(wifi_portal_url),"feedback_enabled":1 if feedback_enabled=="1" else 0,
+      "feedback_prompt":(feedback_prompt.strip() or "¿Cómo fue tu experiencia hoy?"),
+      "logo_data":logo_data,"google_url":xp_connect_url(google_url),
       "whatsapp":xp_connect_whatsapp(whatsapp),"instagram_url":xp_connect_instagram(instagram_url),
       "maps_url":xp_connect_url(maps_url),"phone":phone.strip(),"booking_url":xp_connect_url(booking_url),
       "website_url":xp_connect_url(website_url),"menu_url":xp_connect_url(menu_url),
@@ -604,10 +608,12 @@ async def business_connect_save(
         db.execute(xp_sql_text("DELETE FROM exponenta_connect_profiles WHERE organization_id=:org_id"),{"org_id":org.id})
     db.execute(xp_sql_text("""
       INSERT INTO exponenta_connect_profiles
-      (organization_id,slug,name,subtitle,brand_color,button_border_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
-      VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:button_border_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,1)
+      (organization_id,slug,name,subtitle,brand_color,button_border_color,wifi_enabled,wifi_ssid,wifi_note,wifi_portal_url,feedback_enabled,feedback_prompt,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
+      VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:button_border_color,:wifi_enabled,:wifi_ssid,:wifi_note,:wifi_portal_url,:feedback_enabled,:feedback_prompt,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,1)
       ON CONFLICT (slug) DO UPDATE SET
       organization_id=EXCLUDED.organization_id,name=EXCLUDED.name,subtitle=EXCLUDED.subtitle,brand_color=EXCLUDED.brand_color,button_border_color=EXCLUDED.button_border_color,
+      wifi_enabled=EXCLUDED.wifi_enabled,wifi_ssid=EXCLUDED.wifi_ssid,wifi_note=EXCLUDED.wifi_note,wifi_portal_url=EXCLUDED.wifi_portal_url,
+      feedback_enabled=EXCLUDED.feedback_enabled,feedback_prompt=EXCLUDED.feedback_prompt,
       logo_data=COALESCE(EXCLUDED.logo_data,exponenta_connect_profiles.logo_data),google_url=EXCLUDED.google_url,
       whatsapp=EXCLUDED.whatsapp,instagram_url=EXCLUDED.instagram_url,maps_url=EXCLUDED.maps_url,phone=EXCLUDED.phone,
       booking_url=EXCLUDED.booking_url,website_url=EXCLUDED.website_url,menu_url=EXCLUDED.menu_url,facebook_url=EXCLUDED.facebook_url,
@@ -637,6 +643,12 @@ _bt.write_text(r'''{% extends "base.html" %}
       <label>Descripción corta<input name="subtitle" placeholder="Ej. Podología profesional" value="{{ profile.subtitle if profile else '' }}"></label>
       <label>Color de marca<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else organization.brand_color or '#6b3b22' }}"></label>\n      <label>Color del marco de botones<input type="color" name="button_border_color" value="{{ profile.button_border_color if profile and profile.button_border_color else '#e4ddd7' }}"></label>
       <label>Logo<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label>
+      <label>Wi-Fi<select name="wifi_enabled"><option value="0" {% if not profile or not profile.wifi_enabled %}selected{% endif %}>No mostrar</option><option value="1" {% if profile and profile.wifi_enabled %}selected{% endif %}>Mostrar</option></select></label>
+      <label>Red Wi-Fi<input name="wifi_ssid" value="{{ profile.wifi_ssid if profile else '' }}"></label>
+      <label>Nota Wi-Fi<input name="wifi_note" value="{{ profile.wifi_note if profile else '' }}"></label>
+      <label>Portal Wi-Fi<input name="wifi_portal_url" placeholder="https://..." value="{{ profile.wifi_portal_url if profile else '' }}"></label>
+      <label>Experiencia privada<select name="feedback_enabled"><option value="0" {% if not profile or not profile.feedback_enabled %}selected{% endif %}>No mostrar</option><option value="1" {% if profile and profile.feedback_enabled %}selected{% endif %}>Mostrar</option></select></label>
+      <label>Pregunta<input name="feedback_prompt" value="{{ profile.feedback_prompt if profile else '¿Cómo fue tu experiencia hoy?' }}"></label>
     </section>
     <section>
       <h2>Acciones</h2>
