@@ -414,3 +414,155 @@ if "/* XP CONNECT PRINT MATERIAL V1 */" not in _css:
     _cssp.write_text(_css,encoding="utf-8")
 
 print("Exponenta Connect print material installed")
+
+# XP BUSINESS CONNECT ACCESS V1
+from pathlib import Path as _XpPath2
+_p=_XpPath2("/app/app/main.py")
+_s=_p.read_text(encoding="utf-8")
+_anchor='@app.get("/negocio/lealtad", response_class=HTMLResponse)'
+if "def business_connect_page" not in _s:
+    _block=r'''
+def xp_connect_ensure_org_column(db):
+    xp_connect_ensure(db)
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS organization_id INTEGER"))
+    db.execute(xp_sql_text("CREATE INDEX IF NOT EXISTS idx_exponenta_connect_org ON exponenta_connect_profiles(organization_id)"))
+    db.commit()
+
+@app.get("/negocio/connect", response_class=HTMLResponse)
+def business_connect_page(request: Request, db: Session = Depends(get_db)):
+    user, org = business_admin_context(request, db)
+    xp_connect_ensure_org_column(db)
+    profile = db.execute(
+        xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE organization_id=:org_id ORDER BY slug LIMIT 1"),
+        {"org_id": org.id},
+    ).mappings().first()
+    return render(request, "business/connect.html", {"user": user, "organization": org, "profile": profile})
+
+@app.post("/negocio/connect")
+async def business_connect_save(
+    request: Request,
+    slug: str = Form(""),
+    subtitle: str = Form(""),
+    brand_color: str = Form("#6b3b22"),
+    google_url: str = Form(""),
+    whatsapp: str = Form(""),
+    instagram_url: str = Form(""),
+    maps_url: str = Form(""),
+    phone: str = Form(""),
+    booking_url: str = Form(""),
+    website_url: str = Form(""),
+    menu_url: str = Form(""),
+    facebook_url: str = Form(""),
+    contact_email: str = Form(""),
+    address: str = Form(""),
+    logo_file: UploadFile|None = File(None),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user, org = business_admin_context(request, db)
+    verify_csrf(request, csrf_token)
+    xp_connect_ensure_org_column(db)
+    existing = db.execute(
+        xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE organization_id=:org_id ORDER BY slug LIMIT 1"),
+        {"org_id": org.id},
+    ).mappings().first()
+    clean_slug = xp_connect_slug(slug or (existing["slug"] if existing else org.slug or org.name))
+    if not clean_slug:
+        raise HTTPException(422, "Slug inválido")
+    if len(brand_color)!=7 or not brand_color.startswith("#"):
+        brand_color = getattr(org,"brand_color",None) or "#6b3b22"
+    logo_data = existing.get("logo_data") if existing else None
+    if logo_file and logo_file.filename:
+        data = await logo_file.read()
+        if len(data) > 2*1024*1024:
+            raise HTTPException(422, "Logo máximo 2 MB")
+        mime = logo_file.content_type or "image/png"
+        if mime not in {"image/png","image/jpeg","image/webp"}:
+            raise HTTPException(422, "Logo debe ser PNG, JPG o WebP")
+        logo_data = "data:" + mime + ";base64," + xp_base64.b64encode(data).decode("ascii")
+    vals={
+      "organization_id":org.id,"slug":clean_slug,"name":org.name,"subtitle":subtitle.strip(),
+      "brand_color":brand_color,"logo_data":logo_data,"google_url":xp_connect_url(google_url),
+      "whatsapp":xp_connect_whatsapp(whatsapp),"instagram_url":xp_connect_instagram(instagram_url),
+      "maps_url":xp_connect_url(maps_url),"phone":phone.strip(),"booking_url":xp_connect_url(booking_url),
+      "website_url":xp_connect_url(website_url),"menu_url":xp_connect_url(menu_url),
+      "facebook_url":xp_connect_url(facebook_url),"contact_email":contact_email.strip(),"address":address.strip()
+    }
+    if existing and existing["slug"] != clean_slug:
+        db.execute(xp_sql_text("DELETE FROM exponenta_connect_profiles WHERE organization_id=:org_id"),{"org_id":org.id})
+    db.execute(xp_sql_text("""
+      INSERT INTO exponenta_connect_profiles
+      (organization_id,slug,name,subtitle,brand_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
+      VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,1)
+      ON CONFLICT (slug) DO UPDATE SET
+      organization_id=EXCLUDED.organization_id,name=EXCLUDED.name,subtitle=EXCLUDED.subtitle,brand_color=EXCLUDED.brand_color,
+      logo_data=COALESCE(EXCLUDED.logo_data,exponenta_connect_profiles.logo_data),google_url=EXCLUDED.google_url,
+      whatsapp=EXCLUDED.whatsapp,instagram_url=EXCLUDED.instagram_url,maps_url=EXCLUDED.maps_url,phone=EXCLUDED.phone,
+      booking_url=EXCLUDED.booking_url,website_url=EXCLUDED.website_url,menu_url=EXCLUDED.menu_url,facebook_url=EXCLUDED.facebook_url,
+      contact_email=EXCLUDED.contact_email,address=EXCLUDED.address,active=1
+    """),vals)
+    db.commit()
+    return RedirectResponse("/negocio/connect?message=Connect+actualizado", status_code=303)
+'''
+    _s=_s.replace(_anchor,_block+"\n"+_anchor,1)
+    _p.write_text(_s,encoding="utf-8")
+
+_bt=_XpPath2("/app/app/templates/business/connect.html")
+_bt.write_text(r'''{% extends "base.html" %}
+{% block title %}Connect · {{ organization.name }}{% endblock %}
+{% block body %}
+<main class="business-shell xp-connect-business">
+  <nav class="xp-business-nav">
+    <a href="/negocio">Inicio</a><a href="/negocio/operacion">Operación</a><a href="/negocio/lealtad">Clientes</a><a href="/negocio/marketing">Reseñas</a><a class="active" href="/negocio/connect">Connect</a><a href="/negocio/marca">Marca</a><a href="/negocio/configuracion">Más</a>
+  </nav>
+  <header class="xp-connect-biz-head"><span class="eyebrow">EXPONENTA CONNECT</span><h1>Tu negocio completo en un solo toque.</h1><p>Configura los accesos que verá tu cliente al escanear el QR o acercar el NFC.</p></header>
+  {% if request.query_params.get("message") %}<div class="xp-brand-alert success">✓ Connect actualizado</div>{% endif %}
+  <form method="post" enctype="multipart/form-data" class="xp-connect-biz-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf }}">
+    <section>
+      <h2>Identidad</h2>
+      <label>URL corta<input name="slug" placeholder="{{ organization.slug }}" value="{{ profile.slug if profile else organization.slug }}"></label>
+      <label>Descripción corta<input name="subtitle" placeholder="Ej. Podología profesional" value="{{ profile.subtitle if profile else '' }}"></label>
+      <label>Color de marca<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else organization.brand_color or '#6b3b22' }}"></label>
+      <label>Logo<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label>
+    </section>
+    <section>
+      <h2>Acciones</h2>
+      <label>Reseña de Google<input name="google_url" placeholder="https://..." value="{{ profile.google_url if profile else '' }}"></label>
+      <label>WhatsApp<input name="whatsapp" placeholder="3312345678" value="{{ profile.whatsapp if profile else '' }}"></label>
+      <label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else '' }}"></label>
+      <label>Google Maps<input name="maps_url" placeholder="https://maps..." value="{{ profile.maps_url if profile else '' }}"></label>
+      <label>Teléfono<input name="phone" value="{{ profile.phone if profile else '' }}"></label>
+      <label>Agenda<input name="booking_url" placeholder="https://..." value="{{ profile.booking_url if profile else '' }}"></label>
+      <label>Sitio web<input name="website_url" placeholder="https://..." value="{{ profile.website_url if profile else '' }}"></label>
+      <label>Menú / servicios<input name="menu_url" placeholder="https://..." value="{{ profile.menu_url if profile else '' }}"></label>
+      <label>Facebook<input name="facebook_url" placeholder="https://..." value="{{ profile.facebook_url if profile else '' }}"></label>
+      <label>Correo<input name="contact_email" value="{{ profile.contact_email if profile else '' }}"></label>
+      <label>Dirección<input name="address" value="{{ profile.address if profile else '' }}"></label>
+    </section>
+    <div class="xp-connect-biz-actions">
+      <button class="btn btn-primary" type="submit">Guardar Connect</button>
+      {% if profile %}<a class="btn btn-secondary" href="/connect/{{ profile.slug }}" target="_blank">Ver perfil público</a><a class="btn btn-secondary" href="/admin/connect/{{ profile.slug }}/material">QR / banner</a>{% endif %}
+    </div>
+  </form>
+</main>
+{% endblock %}''',encoding="utf-8")
+
+_cssp=_XpPath2("/app/app/static/app.css")
+_css=_cssp.read_text(encoding="utf-8")
+if "/* XP BUSINESS CONNECT ACCESS V1 */" not in _css:
+    _css+=r'''
+/* XP BUSINESS CONNECT ACCESS V1 */
+.xp-connect-business{max-width:1050px!important}.xp-connect-biz-head{margin:24px 0 18px}.xp-connect-biz-head h1{font-size:clamp(2rem,4vw,3.2rem)!important;margin:5px 0}.xp-connect-biz-head p{color:#71675f;max-width:700px}.xp-connect-biz-form{display:grid;grid-template-columns:1fr 1fr;gap:18px}.xp-connect-biz-form>section{background:#fff;border:1px solid #e4dbd3;border-radius:20px;padding:20px;display:grid;gap:11px}.xp-connect-biz-form h2{margin:0 0 4px}.xp-connect-biz-form label{display:grid;gap:5px;font-size:.72rem;font-weight:800}.xp-connect-biz-form input{min-height:44px;padding:9px 11px;border:1px solid #d8cec6;border-radius:11px;background:#fff}.xp-connect-biz-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}@media(max-width:720px){.xp-connect-biz-form{grid-template-columns:1fr}.xp-connect-biz-actions{grid-column:auto}}
+'''
+    _cssp.write_text(_css,encoding="utf-8")
+
+# Surface Connect in existing business navigation.
+for _f in _XpPath2("/app/app/templates/business").glob("*.html"):
+    _t=_f.read_text(encoding="utf-8")
+    if 'xp-business-nav' in _t and 'href="/negocio/connect"' not in _t:
+        _t=_t.replace('<a href="/negocio/marca">Marca</a>','<a href="/negocio/connect">Connect</a><a href="/negocio/marca">Marca</a>')
+        _t=_t.replace('<a href="/negocio/configuracion">Más</a>','<a href="/negocio/connect">Connect</a><a href="/negocio/configuracion">Más</a>')
+        _f.write_text(_t,encoding="utf-8")
+
+print("Business Connect access installed")
