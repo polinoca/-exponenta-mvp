@@ -808,3 +808,45 @@ if _css.exists():
 @media(max-width:760px){.xp-connect-table article{grid-template-columns:52px 1fr!important}.xp-connect-table article>a{grid-column:auto;justify-content:flex-start;padding:6px 0}}
 '''
         _css.write_text(_cs, encoding="utf-8")
+
+
+# XP CONNECT EXPERIENCES TEMPLATE HOTFIX 2026-10-06
+from pathlib import Path as _XpExperiencePath
+_exp_dir = _XpExperiencePath("/app/app/templates/admin")
+_exp_dir.mkdir(parents=True, exist_ok=True)
+(_exp_dir / "connect_feedback.html").write_text(r'''{% extends "base.html" %}
+{% block title %}Experiencias · {{ profile.name }}{% endblock %}
+{% block body %}
+<main class="container xp-connect-admin">
+  <div class="xp-connect-admin-head">
+    <div>
+      <a href="/admin/connect">← Connect</a>
+      <span class="eyebrow">BUZÓN PRIVADO</span>
+      <h1>Experiencias · {{ profile.name }}</h1>
+      <p>Comentarios privados recibidos desde Exponenta Connect. No se publican en Google.</p>
+    </div>
+  </div>
+
+  <div class="xp-connect-table xp-feedback-list">
+    {% for item in items %}
+    <article style="grid-template-columns:110px minmax(0,1fr)!important">
+      <div style="width:auto;height:auto;background:transparent;display:block">
+        <b style="font-size:18px">{{ item.rating }}/5 ★</b>
+      </div>
+      <section>
+        {% if item.attendant %}
+        <small style="display:block;margin-bottom:6px"><b>Te atendió:</b> {{ item.attendant }}</small>
+        {% endif %}
+        <strong style="display:block">{{ item.comment or "Sin comentario" }}</strong>
+        <small style="display:block;margin-top:7px">{{ item.created_at }}</small>
+      </section>
+    </article>
+    {% else %}
+    <section style="padding:24px 0">
+      <strong>Aún no hay experiencias recibidas.</strong>
+      <p>Cuando un cliente envíe una calificación o comentario, aparecerá aquí.</p>
+    </section>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}''', encoding="utf-8")
