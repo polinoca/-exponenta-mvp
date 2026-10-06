@@ -218,7 +218,7 @@ async def exponenta_connect_save(
         logo_data = "data:" + mime + ";base64," + xp_base64.b64encode(data).decode("ascii")
     values = {
         "slug": slug, "name": name.strip(), "subtitle": subtitle.strip(),
-        "brand_color": brand_color, "logo_data": logo_data,
+        "brand_color": brand_color, "button_border_color": button_border_color, "logo_data": logo_data,
         "google_url": xp_connect_url(google_url), "whatsapp": xp_connect_whatsapp(whatsapp),
         "instagram_url": xp_connect_instagram(instagram_url), "maps_url": xp_connect_url(maps_url),
         "phone": phone.strip(), "booking_url": xp_connect_url(booking_url),
@@ -230,10 +230,10 @@ async def exponenta_connect_save(
         db.execute(xp_sql_text("DELETE FROM exponenta_connect_profiles WHERE slug=:slug"), {"slug": original_slug})
     db.execute(xp_sql_text("""
         INSERT INTO exponenta_connect_profiles
-        (slug,name,subtitle,brand_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
-        VALUES (:slug,:name,:subtitle,:brand_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,:active)
+        (slug,name,subtitle,brand_color,button_border_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
+        VALUES (:slug,:name,:subtitle,:brand_color,:button_border_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,:active)
         ON CONFLICT (slug) DO UPDATE SET
-        name=EXCLUDED.name, subtitle=EXCLUDED.subtitle, brand_color=EXCLUDED.brand_color, logo_data=COALESCE(EXCLUDED.logo_data, exponenta_connect_profiles.logo_data),
+        name=EXCLUDED.name, subtitle=EXCLUDED.subtitle, brand_color=EXCLUDED.brand_color, button_border_color=EXCLUDED.button_border_color, logo_data=COALESCE(EXCLUDED.logo_data, exponenta_connect_profiles.logo_data),
         google_url=EXCLUDED.google_url, whatsapp=EXCLUDED.whatsapp, instagram_url=EXCLUDED.instagram_url, maps_url=EXCLUDED.maps_url,
         phone=EXCLUDED.phone, booking_url=EXCLUDED.booking_url, website_url=EXCLUDED.website_url, menu_url=EXCLUDED.menu_url,
         facebook_url=EXCLUDED.facebook_url, contact_email=EXCLUDED.contact_email, address=EXCLUDED.address, active=EXCLUDED.active
@@ -250,7 +250,7 @@ tpldir.mkdir(parents=True, exist_ok=True)
 (tpldir / "profile.html").write_text(r'''{% extends "base.html" %}
 {% block title %}{{ profile.name }} · Exponenta Connect{% endblock %}
 {% block body %}
-<main class="xp-connect-public" style="--xp-brand:{{ profile.brand_color or '#6b3b22' }}">
+<main class="xp-connect-public" style="--xp-brand:{{ profile.brand_color or '#6b3b22' }};--xp-button-border:{{ profile.button_border_color or '#e4ddd7' }}">
   <section class="xp-connect-card">
     <div class="xp-connect-brand">
       <div class="xp-connect-logo">{% if profile.logo_data %}<img src="{{ profile.logo_data }}" alt="{{ profile.name }}">{% else %}<b>{{ profile.name[:1] }}</b>{% endif %}</div>
@@ -298,7 +298,7 @@ adm = Path("/app/app/templates/admin")
       <label>Nombre<input required name="name" value="{{ profile.name if profile else '' }}"></label>
       <label>Slug<input name="slug" placeholder="nombre-negocio" value="{{ profile.slug if profile else '' }}"></label>
       <label class="wide">Descripción corta<input name="subtitle" placeholder="Ej. Podología profesional" value="{{ profile.subtitle if profile else '' }}"></label>
-      <label>Color<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else '#6b3b22' }}"></label>
+      <label>Color de marca<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else '#6b3b22' }}"></label>\n      <label>Color del marco de botones<input type="color" name="button_border_color" value="{{ profile.button_border_color if profile and profile.button_border_color else '#e4ddd7' }}"></label>
       <label>Logo<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label>
       <label class="wide">Google reseña<input name="google_url" placeholder="https://..." value="{{ profile.google_url if profile else '' }}"></label>
       <label>WhatsApp<input name="whatsapp" placeholder="3312345678" value="{{ profile.whatsapp if profile else '' }}"></label>
@@ -323,7 +323,7 @@ css = cssp.read_text(encoding="utf-8")
 if "/* XP EXPONENTA CONNECT V1 */" not in css:
     css += r'''
 /* XP EXPONENTA CONNECT V1 */
-.xp-connect-public{min-height:100vh;background:linear-gradient(160deg,#f5f1ed,#fff);padding:28px 16px 48px;color:#211d1a}.xp-connect-card{max-width:560px;margin:0 auto}.xp-connect-brand{display:flex;align-items:center;gap:16px;padding:20px 8px 18px}.xp-connect-logo{width:74px;height:74px;border-radius:22px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden;display:grid;place-items:center;color:var(--xp-brand)}.xp-connect-logo img{width:100%;height:100%;object-fit:contain}.xp-connect-logo b{font-size:2rem}.xp-connect-brand span{font-size:.58rem;letter-spacing:.16em;font-weight:900;color:var(--xp-brand)}.xp-connect-brand h1{margin:4px 0 2px;font-size:2rem;line-height:1}.xp-connect-brand p{margin:0;color:#71665e;font-size:.82rem}.xp-connect-actions{display:grid;gap:10px}.xp-connect-actions a{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;min-height:76px;padding:12px 16px;border:1px solid #e4ddd7;border-radius:19px;background:#fff;color:#201c19!important;text-decoration:none!important;box-shadow:0 8px 22px rgba(47,33,22,.05);font-size:1.05rem}.xp-connect-actions a.primary{background:var(--xp-brand);color:#fff!important;border-color:transparent}.xp-connect-actions a span{display:grid}.xp-connect-actions a b{font-size:.95rem}.xp-connect-actions a small{font-size:.67rem;opacity:.68;margin-top:2px}.xp-connect-actions a i{font-style:normal;font-size:1.6rem;opacity:.45}.xp-connect-card footer{text-align:center;padding:24px 0 0;color:#8a817a;font-size:.68rem}.xp-connect-admin-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin:28px 0}.xp-connect-table{display:grid;gap:9px}.xp-connect-table article{display:grid;grid-template-columns:46px 1fr auto auto;gap:12px;align-items:center;padding:12px;border:1px solid #e7ded6;border-radius:15px;background:#fff}.xp-connect-table article>div{width:46px;height:46px;border-radius:12px;background:#f4ede8;display:grid;place-items:center;overflow:hidden}.xp-connect-table img{width:100%;height:100%;object-fit:contain}.xp-connect-table section{display:grid}.xp-connect-table small{color:#7a7068}.xp-connect-table a{font-weight:800;font-size:.72rem}.xp-connect-editor{max-width:900px!important;padding-top:28px}.xp-connect-editor form{margin-top:18px}.xp-connect-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}.xp-connect-grid label{display:grid;gap:5px;font-size:.72rem;font-weight:800}.xp-connect-grid .wide{grid-column:1/-1}.xp-connect-grid input,.xp-connect-grid select{min-height:44px;padding:9px 11px;border:1px solid #d8cec6;border-radius:11px;background:#fff}@media(max-width:640px){.xp-connect-grid{grid-template-columns:1fr}.xp-connect-grid .wide{grid-column:auto}.xp-connect-admin-head{align-items:flex-start;flex-direction:column}.xp-connect-table article{grid-template-columns:44px 1fr}.xp-connect-table article>a{grid-column:auto}.xp-connect-brand h1{font-size:1.7rem}}
+.xp-connect-public{min-height:100vh;background:linear-gradient(160deg,#f5f1ed,#fff);padding:28px 16px 48px;color:#211d1a}.xp-connect-card{max-width:560px;margin:0 auto}.xp-connect-brand{display:flex;align-items:center;gap:16px;padding:20px 8px 18px}.xp-connect-logo{width:74px;height:74px;border-radius:22px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden;display:grid;place-items:center;color:var(--xp-brand)}.xp-connect-logo img{width:100%;height:100%;object-fit:contain}.xp-connect-logo b{font-size:2rem}.xp-connect-brand span{font-size:.58rem;letter-spacing:.16em;font-weight:900;color:var(--xp-brand)}.xp-connect-brand:after{content:"";display:block;position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:999px;background:var(--xp-brand);opacity:.9}.xp-connect-brand{position:relative}.xp-connect-brand h1{margin:4px 0 2px;font-size:2rem;line-height:1}.xp-connect-brand p{margin:0;color:#71665e;font-size:.82rem}.xp-connect-actions{display:grid;gap:10px}.xp-connect-actions a{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;min-height:76px;padding:12px 16px;border:1px solid var(--xp-button-border);border-radius:19px;background:#fff;color:#201c19!important;text-decoration:none!important;box-shadow:0 8px 22px rgba(47,33,22,.05);font-size:1.05rem}.xp-connect-actions a.primary{background:#fff;color:#201c19!important;border:2px solid var(--xp-brand);box-shadow:0 10px 26px color-mix(in srgb,var(--xp-brand) 18%,transparent)}.xp-connect-actions a.primary b{color:var(--xp-brand)}.xp-connect-actions a.primary i{color:var(--xp-brand);opacity:.8}.xp-connect-actions a span{display:grid}.xp-connect-actions a b{font-size:.95rem}.xp-connect-actions a small{font-size:.67rem;opacity:.68;margin-top:2px}.xp-connect-actions a i{font-style:normal;font-size:1.6rem;opacity:.45}.xp-connect-card footer{text-align:center;padding:24px 0 0;color:#8a817a;font-size:.68rem}.xp-connect-admin-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin:28px 0}.xp-connect-table{display:grid;gap:9px}.xp-connect-table article{display:grid;grid-template-columns:46px 1fr auto auto;gap:12px;align-items:center;padding:12px;border:1px solid #e7ded6;border-radius:15px;background:#fff}.xp-connect-table article>div{width:46px;height:46px;border-radius:12px;background:#f4ede8;display:grid;place-items:center;overflow:hidden}.xp-connect-table img{width:100%;height:100%;object-fit:contain}.xp-connect-table section{display:grid}.xp-connect-table small{color:#7a7068}.xp-connect-table a{font-weight:800;font-size:.72rem}.xp-connect-editor{max-width:900px!important;padding-top:28px}.xp-connect-editor form{margin-top:18px}.xp-connect-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}.xp-connect-grid label{display:grid;gap:5px;font-size:.72rem;font-weight:800}.xp-connect-grid .wide{grid-column:1/-1}.xp-connect-grid input,.xp-connect-grid select{min-height:44px;padding:9px 11px;border:1px solid #d8cec6;border-radius:11px;background:#fff}@media(max-width:640px){.xp-connect-grid{grid-template-columns:1fr}.xp-connect-grid .wide{grid-column:auto}.xp-connect-admin-head{align-items:flex-start;flex-direction:column}.xp-connect-table article{grid-template-columns:44px 1fr}.xp-connect-table article>a{grid-column:auto}.xp-connect-brand h1{font-size:1.7rem}}
 '''
     cssp.write_text(css, encoding="utf-8")
 
@@ -485,7 +485,7 @@ async def business_connect_save(
         logo_data = "data:" + mime + ";base64," + xp_base64.b64encode(data).decode("ascii")
     vals={
       "organization_id":org.id,"slug":clean_slug,"name":org.name,"subtitle":subtitle.strip(),
-      "brand_color":brand_color,"logo_data":logo_data,"google_url":xp_connect_url(google_url),
+      "brand_color":brand_color,"button_border_color":button_border_color,"logo_data":logo_data,"google_url":xp_connect_url(google_url),
       "whatsapp":xp_connect_whatsapp(whatsapp),"instagram_url":xp_connect_instagram(instagram_url),
       "maps_url":xp_connect_url(maps_url),"phone":phone.strip(),"booking_url":xp_connect_url(booking_url),
       "website_url":xp_connect_url(website_url),"menu_url":xp_connect_url(menu_url),
@@ -495,10 +495,10 @@ async def business_connect_save(
         db.execute(xp_sql_text("DELETE FROM exponenta_connect_profiles WHERE organization_id=:org_id"),{"org_id":org.id})
     db.execute(xp_sql_text("""
       INSERT INTO exponenta_connect_profiles
-      (organization_id,slug,name,subtitle,brand_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
-      VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,1)
+      (organization_id,slug,name,subtitle,brand_color,button_border_color,logo_data,google_url,whatsapp,instagram_url,maps_url,phone,booking_url,website_url,menu_url,facebook_url,contact_email,address,active)
+      VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:button_border_color,:logo_data,:google_url,:whatsapp,:instagram_url,:maps_url,:phone,:booking_url,:website_url,:menu_url,:facebook_url,:contact_email,:address,1)
       ON CONFLICT (slug) DO UPDATE SET
-      organization_id=EXCLUDED.organization_id,name=EXCLUDED.name,subtitle=EXCLUDED.subtitle,brand_color=EXCLUDED.brand_color,
+      organization_id=EXCLUDED.organization_id,name=EXCLUDED.name,subtitle=EXCLUDED.subtitle,brand_color=EXCLUDED.brand_color,button_border_color=EXCLUDED.button_border_color,
       logo_data=COALESCE(EXCLUDED.logo_data,exponenta_connect_profiles.logo_data),google_url=EXCLUDED.google_url,
       whatsapp=EXCLUDED.whatsapp,instagram_url=EXCLUDED.instagram_url,maps_url=EXCLUDED.maps_url,phone=EXCLUDED.phone,
       booking_url=EXCLUDED.booking_url,website_url=EXCLUDED.website_url,menu_url=EXCLUDED.menu_url,facebook_url=EXCLUDED.facebook_url,
@@ -526,7 +526,7 @@ _bt.write_text(r'''{% extends "base.html" %}
       <h2>Identidad</h2>
       <label>URL corta<input name="slug" placeholder="{{ organization.slug }}" value="{{ profile.slug if profile else organization.slug }}"></label>
       <label>Descripción corta<input name="subtitle" placeholder="Ej. Podología profesional" value="{{ profile.subtitle if profile else '' }}"></label>
-      <label>Color de marca<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else organization.brand_color or '#6b3b22' }}"></label>
+      <label>Color de marca<input type="color" name="brand_color" value="{{ profile.brand_color if profile and profile.brand_color else organization.brand_color or '#6b3b22' }}"></label>\n      <label>Color del marco de botones<input type="color" name="button_border_color" value="{{ profile.button_border_color if profile and profile.button_border_color else '#e4ddd7' }}"></label>
       <label>Logo<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label>
     </section>
     <section>
