@@ -160,7 +160,7 @@ def exponenta_connect_admin(request: Request, db: Session = Depends(get_db)):
 @app.get("/admin/connect/nuevo", response_class=HTMLResponse)
 def exponenta_connect_new(request: Request, db: Session = Depends(get_db)):
     user = control_superadmin(request, db)
-    return render(request, "admin/connect_edit.html", {"user": user, "profile": None})
+    return render(request, "admin/connect_edit.html", {"user": user, "profile": None, "csrf": request.state.session["csrf"]})
 
 @app.get("/admin/connect/{slug}/editar", response_class=HTMLResponse)
 def exponenta_connect_edit(slug: str, request: Request, db: Session = Depends(get_db)):
@@ -169,7 +169,7 @@ def exponenta_connect_edit(slug: str, request: Request, db: Session = Depends(ge
     profile = db.execute(xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE slug=:slug"), {"slug": slug}).mappings().first()
     if not profile:
         raise HTTPException(404)
-    return render(request, "admin/connect_edit.html", {"user": user, "profile": profile})
+    return render(request, "admin/connect_edit.html", {"user": user, "profile": profile, "csrf": request.state.session["csrf"]})
 
 @app.post("/admin/connect/guardar")
 async def exponenta_connect_save(
@@ -439,7 +439,7 @@ def business_connect_page(request: Request, db: Session = Depends(get_db)):
         xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE organization_id=:org_id ORDER BY slug LIMIT 1"),
         {"org_id": org.id},
     ).mappings().first()
-    return render(request, "business/connect.html", {"user": user, "organization": org, "profile": profile})
+    return render(request, "business/connect.html", {"user": user, "organization": org, "profile": profile, "csrf": request.state.session["csrf"]})
 
 @app.post("/negocio/connect")
 async def business_connect_save(
