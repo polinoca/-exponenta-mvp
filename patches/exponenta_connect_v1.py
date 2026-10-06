@@ -1041,3 +1041,195 @@ for _form_path in [
         _form = _xp_polish_re.sub(r'<label[^>]*>Portal Wi-Fi \(opcional\)<input[^>]*name="wifi_portal_url"[^>]*></label>', '', _form)
         _form = _xp_polish_re.sub(r'<label[^>]*>Portal Wi-Fi<input[^>]*name="wifi_portal_url"[^>]*></label>', '', _form)
         _form_path.write_text(_form, encoding="utf-8")
+
+
+# XP CONNECT ACTION ORDER EDITOR 2026-10-06
+from pathlib import Path as _XpOrderPath
+_order_main = _XpOrderPath("/app/app/main.py")
+_order_s = _order_main.read_text(encoding="utf-8")
+
+# Persist a simple comma-separated order string.
+_order_schema_anchor = 'db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS button_border_color VARCHAR(16)"))'
+if 'ADD COLUMN IF NOT EXISTS action_order TEXT' not in _order_s and _order_schema_anchor in _order_s:
+    _order_s = _order_s.replace(
+        _order_schema_anchor,
+        _order_schema_anchor + '\n    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS action_order TEXT"))',
+        1,
+    )
+
+# Add action_order to both admin and business save signatures.
+if 'action_order: str = Form("")' not in _order_s:
+    _order_s = _order_s.replace(
+        '    feedback_prompt: str = Form(""),\n    google_url:',
+        '    feedback_prompt: str = Form(""),\n    action_order: str = Form(""),\n    google_url:',
+    )
+
+# Add value to both save dictionaries.
+_order_s = _order_s.replace(
+    '"feedback_prompt": (feedback_prompt.strip() or "¿Cómo fue tu experiencia hoy?"),\n        "logo_data":',
+    '"feedback_prompt": (feedback_prompt.strip() or "¿Cómo fue tu experiencia hoy?"),\n        "action_order": action_order.strip(),\n        "logo_data":',
+)
+_order_s = _order_s.replace(
+    '"feedback_prompt":(feedback_prompt.strip() or "¿Cómo fue tu experiencia hoy?"),\n      "logo_data":',
+    '"feedback_prompt":(feedback_prompt.strip() or "¿Cómo fue tu experiencia hoy?"),\n      "action_order":action_order.strip(),\n      "logo_data":',
+)
+
+# Extend admin SQL.
+_order_s = _order_s.replace(
+    '(slug,name,subtitle,brand_color,button_border_color,wifi_enabled,wifi_ssid,wifi_note,wifi_portal_url,feedback_enabled,feedback_prompt,logo_data,',
+    '(slug,name,subtitle,brand_color,button_border_color,wifi_enabled,wifi_ssid,wifi_note,wifi_portal_url,feedback_enabled,feedback_prompt,action_order,logo_data,',
+)
+_order_s = _order_s.replace(
+    'VALUES (:slug,:name,:subtitle,:brand_color,:button_border_color,:wifi_enabled,:wifi_ssid,:wifi_note,:wifi_portal_url,:feedback_enabled,:feedback_prompt,:logo_data,',
+    'VALUES (:slug,:name,:subtitle,:brand_color,:button_border_color,:wifi_enabled,:wifi_ssid,:wifi_note,:wifi_portal_url,:feedback_enabled,:feedback_prompt,:action_order,:logo_data,',
+)
+_order_s = _order_s.replace(
+    'feedback_enabled=EXCLUDED.feedback_enabled,feedback_prompt=EXCLUDED.feedback_prompt,\n        logo_data=',
+    'feedback_enabled=EXCLUDED.feedback_enabled,feedback_prompt=EXCLUDED.feedback_prompt,action_order=EXCLUDED.action_order,\n        logo_data=',
+)
+
+# Extend business SQL.
+_order_s = _order_s.replace(
+    '(organization_id,slug,name,subtitle,brand_color,button_border_color,wifi_enabled,wifi_ssid,wifi_note,wifi_portal_url,feedback_enabled,feedback_prompt,logo_data,',
+    '(organization_id,slug,name,subtitle,brand_color,button_border_color,wifi_enabled,wifi_ssid,wifi_note,wifi_portal_url,feedback_enabled,feedback_prompt,action_order,logo_data,',
+)
+_order_s = _order_s.replace(
+    'VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:button_border_color,:wifi_enabled,:wifi_ssid,:wifi_note,:wifi_portal_url,:feedback_enabled,:feedback_prompt,:logo_data,',
+    'VALUES (:organization_id,:slug,:name,:subtitle,:brand_color,:button_border_color,:wifi_enabled,:wifi_ssid,:wifi_note,:wifi_portal_url,:feedback_enabled,:feedback_prompt,:action_order,:logo_data,',
+)
+_order_s = _order_s.replace(
+    'feedback_enabled=EXCLUDED.feedback_enabled,feedback_prompt=EXCLUDED.feedback_prompt,\n      logo_data=',
+    'feedback_enabled=EXCLUDED.feedback_enabled,feedback_prompt=EXCLUDED.feedback_prompt,action_order=EXCLUDED.action_order,\n      logo_data=',
+)
+
+_order_main.write_text(_order_s, encoding="utf-8")
+
+_order_default = "google,whatsapp,instagram,maps,call,website,booking,menu,facebook,wifi,feedback,save"
+
+_order_editor = r'''
+<section class="xp-order-editor">
+  <div class="xp-order-head">
+    <div><h2>Orden de botones</h2><p>Arrastra para elegir cómo los verá el cliente.</p></div>
+  </div>
+  <input type="hidden" name="action_order" class="xp-order-value" value="{{ profile.action_order if profile and profile.action_order else 'google,whatsapp,instagram,maps,call,website,booking,menu,facebook,wifi,feedback,save' }}">
+  <div class="xp-order-list">
+    <div class="xp-order-item" draggable="true" data-key="google"><span>☷</span><b>Reseña de Google</b></div>
+    <div class="xp-order-item" draggable="true" data-key="whatsapp"><span>☷</span><b>WhatsApp</b></div>
+    <div class="xp-order-item" draggable="true" data-key="instagram"><span>☷</span><b>Instagram</b></div>
+    <div class="xp-order-item" draggable="true" data-key="maps"><span>☷</span><b>Cómo llegar</b></div>
+    <div class="xp-order-item" draggable="true" data-key="call"><span>☷</span><b>Llamar</b></div>
+    <div class="xp-order-item" draggable="true" data-key="website"><span>☷</span><b>Sitio web</b></div>
+    <div class="xp-order-item" draggable="true" data-key="booking"><span>☷</span><b>Agendar cita</b></div>
+    <div class="xp-order-item" draggable="true" data-key="menu"><span>☷</span><b>Menú / servicios</b></div>
+    <div class="xp-order-item" draggable="true" data-key="facebook"><span>☷</span><b>Facebook</b></div>
+    <div class="xp-order-item" draggable="true" data-key="wifi"><span>☷</span><b>Wi-Fi</b></div>
+    <div class="xp-order-item" draggable="true" data-key="feedback"><span>☷</span><b>Experiencia</b></div>
+    <div class="xp-order-item" draggable="true" data-key="save"><span>☷</span><b>Guardar contacto</b></div>
+  </div>
+</section>
+<script>
+(function(){
+  document.querySelectorAll('.xp-order-editor').forEach(function(editor){
+    const list=editor.querySelector('.xp-order-list');
+    const hidden=editor.querySelector('.xp-order-value');
+    const items=[...list.querySelectorAll('.xp-order-item')];
+    const saved=(hidden.value||'').split(',').filter(Boolean);
+    const byKey=Object.fromEntries(items.map(el=>[el.dataset.key,el]));
+    saved.forEach(k=>{if(byKey[k]) list.appendChild(byKey[k]);});
+    items.forEach(el=>{if(!saved.includes(el.dataset.key)) list.appendChild(el);});
+
+    let dragging=null;
+    list.addEventListener('dragstart',e=>{
+      dragging=e.target.closest('.xp-order-item');
+      if(dragging) dragging.classList.add('dragging');
+    });
+    list.addEventListener('dragend',()=>{
+      if(dragging) dragging.classList.remove('dragging');
+      dragging=null; sync();
+    });
+    list.addEventListener('dragover',e=>{
+      e.preventDefault();
+      if(!dragging) return;
+      const after=[...list.querySelectorAll('.xp-order-item:not(.dragging)')].find(el=>{
+        const r=el.getBoundingClientRect();
+        return e.clientY < r.top+r.height/2;
+      });
+      if(after) list.insertBefore(dragging,after); else list.appendChild(dragging);
+    });
+    function sync(){
+      hidden.value=[...list.querySelectorAll('.xp-order-item')].map(el=>el.dataset.key).join(',');
+    }
+    editor.closest('form')?.addEventListener('submit',sync);
+    sync();
+  });
+})();
+</script>
+'''
+
+# Admin editor.
+_admin_order = _XpOrderPath("/app/app/templates/admin/connect_edit.html")
+if _admin_order.exists():
+    _t = _admin_order.read_text(encoding="utf-8")
+    if 'xp-order-editor' not in _t:
+        _t = _t.replace(
+            '    <button class="btn btn-primary" type="submit">Guardar y publicar</button>',
+            _order_editor + '\n    <button class="btn btn-primary" type="submit">Guardar y publicar</button>',
+            1,
+        )
+        _admin_order.write_text(_t, encoding="utf-8")
+
+# Business editor.
+_business_order = _XpOrderPath("/app/app/templates/business/connect.html")
+if _business_order.exists():
+    _t = _business_order.read_text(encoding="utf-8")
+    if 'xp-order-editor' not in _t:
+        _t = _t.replace(
+            '    <div class="xp-connect-biz-actions">',
+            _order_editor + '\n    <div class="xp-connect-biz-actions">',
+            1,
+        )
+        _business_order.write_text(_t, encoding="utf-8")
+
+# Public page: reorder rendered buttons without complicating the template.
+_public_order = _XpOrderPath("/app/app/templates/connect/profile.html")
+if _public_order.exists():
+    _t = _public_order.read_text(encoding="utf-8")
+    if 'XP_CONNECT_PUBLIC_ORDER' not in _t:
+        _public_script = r'''
+<script id="XP_CONNECT_PUBLIC_ORDER">
+(function(){
+  const list=document.querySelector('.xp-actions');
+  if(!list) return;
+  const order="{{ profile.action_order if profile.action_order else 'google,whatsapp,instagram,maps,call,website,booking,menu,facebook,wifi,feedback,save' }}".split(',');
+  const selectors={
+    google:'.xp-google',whatsapp:'.xp-whatsapp',instagram:'.xp-instagram',maps:'.xp-map',
+    call:'.xp-call',website:'.xp-web',booking:'.xp-booking',menu:'.xp-menu',
+    facebook:'.xp-facebook',wifi:'.xp-wifi',feedback:'.xp-feedback',save:'.xp-save'
+  };
+  order.forEach(key=>{
+    const el=list.querySelector(selectors[key]||'__none__');
+    if(el) list.appendChild(el);
+  });
+})();
+</script>
+'''
+        _t = _t.replace('</section>\n  <footer class="xp-foot">', '</section>\n'+_public_script+'\n  <footer class="xp-foot">', 1)
+        _public_order.write_text(_t, encoding="utf-8")
+
+# Styling: compact and obvious drag UI.
+_order_css = _XpOrderPath("/app/app/static/app.css")
+if _order_css.exists():
+    _css = _order_css.read_text(encoding="utf-8")
+    if '/* XP CONNECT ACTION ORDER */' not in _css:
+        _css += r'''
+/* XP CONNECT ACTION ORDER */
+.xp-order-editor{grid-column:1/-1;background:#fff;border:1px solid #e4dbd3;border-radius:18px;padding:18px;margin:6px 0 18px}
+.xp-order-head h2{margin:0;font-size:1.1rem}.xp-order-head p{margin:4px 0 14px;color:#776e67;font-size:.8rem}
+.xp-order-list{display:grid;gap:7px}
+.xp-order-item{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid #ded5ce;border-radius:12px;background:#faf8f6;cursor:grab;user-select:none}
+.xp-order-item:active{cursor:grabbing}.xp-order-item.dragging{opacity:.45}
+.xp-order-item span{font-size:1.2rem;color:#8c8179}.xp-order-item b{font-size:.82rem}
+'''
+        _order_css.write_text(_css, encoding="utf-8")
+
+print("Exponenta Connect action ordering installed")
