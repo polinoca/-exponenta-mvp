@@ -197,7 +197,8 @@ def exponenta_connect_admin(request: Request, db: Session = Depends(get_db)):
     xp_connect_ensure(db)
     profiles = db.execute(xp_sql_text("""
         SELECT p.*,
-               COALESCE((SELECT COUNT(*) FROM exponenta_connect_clicks c WHERE c.slug=p.slug),0) AS clicks
+               COALESCE((SELECT COUNT(*) FROM exponenta_connect_clicks c WHERE c.slug=p.slug),0) AS clicks,
+               COALESCE((SELECT COUNT(*) FROM exponenta_connect_feedback f WHERE f.slug=p.slug),0) AS feedback_count
         FROM exponenta_connect_profiles p ORDER BY p.name
     """)).mappings().all()
     return render(request, "admin/connect.html", {"user": user, "profiles": profiles})
@@ -206,6 +207,20 @@ def exponenta_connect_admin(request: Request, db: Session = Depends(get_db)):
 def exponenta_connect_new(request: Request, db: Session = Depends(get_db)):
     user = control_superadmin(request, db)
     return render(request, "admin/connect_edit.html", {"user": user, "profile": None, "csrf": request.state.session["csrf"]})
+
+
+@app.get("/admin/connect/{slug}/experiencias", response_class=HTMLResponse)
+def exponenta_connect_feedback_admin(slug: str, request: Request, db: Session = Depends(get_db)):
+    user = control_superadmin(request, db)
+    xp_connect_ensure(db)
+    profile = db.execute(xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE slug=:slug"), {"slug": slug}).mappings().first()
+    if not profile:
+        raise HTTPException(404)
+    items = db.execute(
+        xp_sql_text("SELECT * FROM exponenta_connect_feedback WHERE slug=:slug ORDER BY created_at DESC LIMIT 200"),
+        {"slug": slug},
+    ).mappings().all()
+    return render(request, "admin/connect_feedback.html", {"user": user, "profile": profile, "items": items})
 
 @app.get("/admin/connect/{slug}/editar", response_class=HTMLResponse)
 def exponenta_connect_edit(slug: str, request: Request, db: Session = Depends(get_db)):
@@ -508,7 +523,7 @@ _t = _XpPath("/app/app/templates/admin/connect.html")
 if _t.exists():
     _x = _t.read_text(encoding="utf-8")
     old = '<a href="/connect/{{ p.slug }}" target="_blank">Abrir</a><a href="/admin/connect/{{ p.slug }}/editar">Editar</a>'
-    new = '<a href="/connect/{{ p.slug }}" target="_blank">Abrir</a><a href="/admin/connect/{{ p.slug }}/material">QR / banner</a><a href="/admin/connect/{{ p.slug }}/editar">Editar</a>'
+    new = '<a href="/connect/{{ p.slug }}" target="_blank">Abrir</a><a href="/admin/connect/{{ p.slug }}/material">QR / banner</a><a href="/admin/connect/{{ p.slug }}/experiencias">Experiencias{% if p.feedback_count %} ({{ p.feedback_count }}){% endif %}</a><a href="/admin/connect/{{ p.slug }}/editar">Editar</a>'
     if old in _x:
         _x = _x.replace(old,new)
         _t.write_text(_x,encoding="utf-8")
