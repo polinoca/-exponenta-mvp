@@ -430,6 +430,9 @@ def xp_connect_ensure_org_column(db):
 
 @app.get("/negocio/connect", response_class=HTMLResponse)
 def business_connect_page(request: Request, db: Session = Depends(get_db)):
+    current_user = require_user(request, db)
+    if current_user.role == Role.SUPERADMIN:
+        return RedirectResponse("/admin/connect", status_code=303)
     user, org = business_admin_context(request, db)
     xp_connect_ensure_org_column(db)
     profile = db.execute(
