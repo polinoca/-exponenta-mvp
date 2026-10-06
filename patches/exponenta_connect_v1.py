@@ -247,31 +247,115 @@ async def exponenta_connect_save(
 
 tpldir = Path("/app/app/templates/connect")
 tpldir.mkdir(parents=True, exist_ok=True)
-(tpldir / "profile.html").write_text(r'''{% extends "base.html" %}
-{% block title %}{{ profile.name }} · Exponenta Connect{% endblock %}
-{% block body %}
-<main class="xp-connect-public" style="--xp-brand:{{ profile.brand_color or '#6b3b22' }};--xp-button-border:{{ profile.button_border_color or '#e4ddd7' }}">
-  <section class="xp-connect-card">
-    <div class="xp-connect-brand">
-      <div class="xp-connect-logo">{% if profile.logo_data %}<img src="{{ profile.logo_data }}" alt="{{ profile.name }}">{% else %}<b>{{ profile.name[:1] }}</b>{% endif %}</div>
-      <div><span>EXPONENTA CONNECT</span><h1>{{ profile.name }}</h1>{% if profile.subtitle %}<p>{{ profile.subtitle }}</p>{% endif %}</div>
+(tpldir / "profile.html").write_text(r'''<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="{{ profile.brand_color or '#6b3b22' }}">
+  <title>{{ profile.name }} · Exponenta Connect</title>
+  <style>
+    :root{
+      --brand:{{ profile.brand_color or '#6b3b22' }};
+      --border:{{ profile.button_border_color or '#e4ddd7' }};
+      --bg:#f7f4f0;--card:#ffffff;--ink:#171513;--muted:#756d67;--soft:#eee7e1;
+      --shadow:0 8px 24px rgba(34,24,17,.055);
+    }
+    *{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    body{min-height:100dvh;-webkit-font-smoothing:antialiased}
+    a{-webkit-tap-highlight-color:transparent}
+    .xp-page{width:100%;max-width:620px;margin:0 auto;padding:max(24px,env(safe-area-inset-top)) 18px max(34px,env(safe-area-inset-bottom))}
+    .xp-head{display:flex;align-items:center;gap:15px;padding:6px 4px 21px;position:relative}
+    .xp-head:after{content:"";position:absolute;left:4px;right:4px;bottom:8px;height:3px;border-radius:999px;background:var(--brand);opacity:.9}
+    .xp-logo{width:78px;height:78px;border-radius:23px;overflow:hidden;background:#fff;display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.05);flex:0 0 auto}
+    .xp-logo img{width:100%;height:100%;object-fit:contain}.xp-logo b{font-size:2rem;color:var(--brand)}
+    .xp-eyebrow{display:block;font-size:11px;line-height:1;letter-spacing:.17em;font-weight:850;color:var(--brand);margin-bottom:7px}
+    .xp-head h1{font-size:34px;line-height:.98;letter-spacing:-.035em;margin:0 0 7px;font-weight:850}
+    .xp-head p{font-size:16px;line-height:1.25;margin:0;color:var(--muted);font-weight:520}
+    .xp-actions{display:grid;gap:12px;margin-top:10px}
+    .xp-action{display:grid;grid-template-columns:48px minmax(0,1fr) 24px;align-items:center;gap:14px;min-height:88px;padding:15px 17px;background:var(--card);border:1.5px solid var(--border);border-radius:23px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:transform .12s ease,box-shadow .12s ease}
+    .xp-action:active{transform:scale(.986);box-shadow:0 3px 12px rgba(34,24,17,.05)}
+    .xp-icon{width:46px;height:46px;border-radius:14px;background:#faf8f6;display:grid;place-items:center}
+    .xp-icon svg,.xp-icon img{width:29px;height:29px;display:block}
+    .xp-copy{min-width:0}.xp-copy b{display:block;font-size:18px;line-height:1.08;letter-spacing:-.012em}.xp-copy small{display:block;margin-top:5px;color:var(--muted);font-size:13.5px;line-height:1.2;font-weight:520}
+    .xp-arrow{font-size:30px;line-height:1;color:#aaa19a;text-align:right}
+    .xp-google{border:2px solid var(--brand);background:#fff;box-shadow:0 10px 28px rgba(34,24,17,.07)}
+    .xp-google .xp-copy b{color:var(--brand)}
+    .xp-stars{display:flex;gap:2px;margin-top:7px}
+    .xp-stars svg{width:15px;height:15px;fill:#f4b400}
+    .xp-whatsapp .xp-icon{background:#eefbf3}.xp-instagram .xp-icon{background:#fff5fb}
+    .xp-save .xp-icon,.xp-map .xp-icon,.xp-call .xp-icon,.xp-web .xp-icon,.xp-booking .xp-icon,.xp-menu .xp-icon,.xp-facebook .xp-icon{color:var(--brand)}
+    .xp-foot{text-align:center;padding:25px 6px 4px;color:#958c85;font-size:12px}.xp-foot b{color:#6f665f}
+    @media(max-width:420px){
+      .xp-page{padding-left:14px;padding-right:14px}.xp-logo{width:72px;height:72px}.xp-head{gap:13px}.xp-head h1{font-size:31px}.xp-action{min-height:84px;padding:14px 14px;border-radius:21px}.xp-icon{width:44px;height:44px}.xp-copy b{font-size:17px}.xp-copy small{font-size:13px}
+    }
+    @media(min-width:621px){body{padding:24px 0}.xp-page{border-radius:30px}}
+  </style>
+</head>
+<body>
+<main class="xp-page">
+  <header class="xp-head">
+    <div class="xp-logo">{% if profile.logo_data %}<img src="{{ profile.logo_data }}" alt="{{ profile.name }}">{% else %}<b>{{ profile.name[:1] }}</b>{% endif %}</div>
+    <div>
+      <span class="xp-eyebrow">EXPONENTA CONNECT</span>
+      <h1>{{ profile.name }}</h1>
+      {% if profile.subtitle %}<p>{{ profile.subtitle }}</p>{% endif %}
     </div>
-    <div class="xp-connect-actions">
-      {% if profile.google_url %}<a class="primary" href="/connect/{{ profile.slug }}/go/google">★ <span><b>Dejar una reseña en Google</b><small>Tu opinión nos ayuda a crecer</small></span><i>›</i></a>{% endif %}
-      {% if profile.whatsapp %}<a href="/connect/{{ profile.slug }}/go/whatsapp">💬 <span><b>WhatsApp</b><small>Escríbenos directamente</small></span><i>›</i></a>{% endif %}
-      {% if profile.instagram_url %}<a href="/connect/{{ profile.slug }}/go/instagram">◎ <span><b>Instagram</b><small>Síguenos y conoce más</small></span><i>›</i></a>{% endif %}
-      {% if profile.booking_url %}<a href="/connect/{{ profile.slug }}/go/booking">◷ <span><b>Agendar cita</b><small>Reserva en línea</small></span><i>›</i></a>{% endif %}
-      {% if profile.maps_url %}<a href="/connect/{{ profile.slug }}/go/maps">⌖ <span><b>Cómo llegar</b><small>Abrir ubicación</small></span><i>›</i></a>{% endif %}
-      {% if profile.phone %}<a href="/connect/{{ profile.slug }}/go/call">☎ <span><b>Llamar</b><small>Contacto directo</small></span><i>›</i></a>{% endif %}
-      {% if profile.menu_url %}<a href="/connect/{{ profile.slug }}/go/menu">☰ <span><b>Menú / servicios</b><small>Ver información</small></span><i>›</i></a>{% endif %}
-      {% if profile.website_url %}<a href="/connect/{{ profile.slug }}/go/website">↗ <span><b>Sitio web</b><small>Visitar página</small></span><i>›</i></a>{% endif %}
-      {% if profile.facebook_url %}<a href="/connect/{{ profile.slug }}/go/facebook">f <span><b>Facebook</b><small>Visitar perfil</small></span><i>›</i></a>{% endif %}
-      <a href="/connect/{{ profile.slug }}/contact.vcf">＋ <span><b>Guardar contacto</b><small>Agrega el negocio a tu celular</small></span><i>›</i></a>
-    </div>
-    <footer>Conectado por <b>Exponenta</b></footer>
+  </header>
+
+  <section class="xp-actions">
+    {% if profile.google_url %}
+    <a class="xp-action xp-google" href="/connect/{{ profile.slug }}/go/google" aria-label="Dejar una reseña en Google">
+      <span class="xp-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15 18.9 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 9.8-2 13.3-5.2l-6.2-5.2C29.1 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.2-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+        </svg>
+      </span>
+      <span class="xp-copy"><b>Dejar una reseña en Google</b><small>Tu opinión nos ayuda a crecer</small><span class="xp-stars" aria-label="5 estrellas">{% for _ in range(5) %}<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9z"/></svg>{% endfor %}</span></span><span class="xp-arrow">›</span>
+    </a>
+    {% endif %}
+
+    {% if profile.whatsapp %}
+    <a class="xp-action xp-whatsapp" href="/connect/{{ profile.slug }}/go/whatsapp">
+      <span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#25D366"/><path fill="#fff" d="M23.6 19.4c-.4-.2-2.2-1.1-2.6-1.2-.3-.1-.6-.2-.8.2-.2.4-.9 1.2-1.1 1.4-.2.3-.4.3-.8.1-2.2-1.1-3.7-2-5.2-4.5-.4-.7.4-.7 1.1-2.2.1-.3 0-.5-.1-.7-.1-.2-.8-2-1.1-2.8-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.7.1-1 .5-.3.4-1.3 1.3-1.3 3.2s1.4 3.7 1.6 4c.2.3 2.7 4.1 6.5 5.7.9.4 1.6.6 2.2.8.9.3 1.8.2 2.4.1.7-.1 2.2-.9 2.5-1.8.3-.9.3-1.7.2-1.8-.2-.1-.5-.2-.9-.4z"/><path fill="#fff" d="M26.8 5.2A15.2 15.2 0 003.1 23.5L1 31l7.7-2A15.3 15.3 0 1026.8 5.2zm-10.7 23a12.2 12.2 0 01-6.2-1.7l-.4-.2-4.6 1.2 1.2-4.5-.3-.5A12.3 12.3 0 1116.1 28.2z"/></svg></span>
+      <span class="xp-copy"><b>WhatsApp</b><small>Escríbenos directamente</small></span><span class="xp-arrow">›</span>
+    </a>
+    {% endif %}
+
+    {% if profile.instagram_url %}
+    <a class="xp-action xp-instagram" href="/connect/{{ profile.slug }}/go/instagram">
+      <span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><defs><linearGradient id="ig" x1="0" y1="32" x2="32" y2="0"><stop stop-color="#feda75"/><stop offset=".28" stop-color="#fa7e1e"/><stop offset=".52" stop-color="#d62976"/><stop offset=".78" stop-color="#962fbf"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient></defs><rect x="3" y="3" width="26" height="26" rx="8" fill="url(#ig)"/><circle cx="16" cy="16" r="6.3" fill="none" stroke="#fff" stroke-width="2.3"/><circle cx="23.2" cy="8.9" r="1.6" fill="#fff"/></svg></span>
+      <span class="xp-copy"><b>Instagram</b><small>Síguenos y conoce más</small></span><span class="xp-arrow">›</span>
+    </a>
+    {% endif %}
+
+    {% if profile.maps_url %}
+    <a class="xp-action xp-map" href="/connect/{{ profile.slug }}/go/maps"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s6-5.2 6-11a6 6 0 10-12 0c0 5.8 6 11 6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span><span class="xp-copy"><b>Cómo llegar</b><small>Abrir ubicación</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    {% if profile.phone %}
+    <a class="xp-action xp-call" href="/connect/{{ profile.slug }}/go/call"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M7 3h3l1.5 4-2 1.6a15 15 0 006 6l1.6-2L21 14v3c0 2-1.6 4-3.7 4C10 21 3 14 3 6.7 3 4.6 5 3 7 3z"/></svg></span><span class="xp-copy"><b>Llamar</b><small>Contacto directo</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    {% if profile.website_url %}
+    <a class="xp-action xp-web" href="/connect/{{ profile.slug }}/go/website"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.5 3.6 5.5 3.6 9S14.4 18.5 12 21M12 3c-2.4 2.5-3.6 5.5-3.6 9s1.2 6.5 3.6 9"/></svg></span><span class="xp-copy"><b>Sitio web</b><small>Visitar página</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    {% if profile.booking_url %}
+    <a class="xp-action xp-booking" href="/connect/{{ profile.slug }}/go/booking"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M8 14h3v3H8z"/></svg></span><span class="xp-copy"><b>Agendar cita</b><small>Reserva en línea</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    {% if profile.menu_url %}
+    <a class="xp-action xp-menu" href="/connect/{{ profile.slug }}/go/menu"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span><span class="xp-copy"><b>Menú / servicios</b><small>Ver información</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    {% if profile.facebook_url %}
+    <a class="xp-action xp-facebook" href="/connect/{{ profile.slug }}/go/facebook"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#1877F2"/><path fill="#fff" d="M18.1 27V17.2h3.3l.5-3.8h-3.8V11c0-1.1.3-1.8 1.9-1.8h2V5.8c-.4-.1-1.6-.2-3-.2-3 0-5.1 1.9-5.1 5.3v2.5h-3.4v3.8h3.4V27z"/></svg></span><span class="xp-copy"><b>Facebook</b><small>Conoce más del negocio</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    <a class="xp-action xp-save" href="/connect/{{ profile.slug }}/contact.vcf"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/><path d="M19 4v5M16.5 6.5h5"/></svg></span><span class="xp-copy"><b>Guardar contacto</b><small>Agrega el negocio a tu celular</small></span><span class="xp-arrow">›</span></a>
   </section>
+  <footer class="xp-foot">Conectado por <b>Exponenta</b></footer>
 </main>
-{% endblock %}''', encoding="utf-8")
+</body>
+</html>''', encoding="utf-8")
 
 adm = Path("/app/app/templates/admin")
 (adm / "connect.html").write_text(r'''{% extends "base.html" %}
