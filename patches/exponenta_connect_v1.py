@@ -345,7 +345,7 @@ def exponenta_connect_material(slug: str, request: Request, db: Session = Depend
         raise HTTPException(404)
     return render(request, "admin/connect_material.html", {"user": user, "profile": profile})
 '''
-    _s = _s.replace(_anchor, _block + "\\n" + _anchor, 1)
+    _s = _s.replace(_anchor, _block + "\n" + _anchor, 1)
     _p.write_text(_s, encoding="utf-8")
 
 _t = _XpPath("/app/app/templates/admin/connect.html")
