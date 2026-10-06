@@ -869,3 +869,175 @@ _exp_dir.mkdir(parents=True, exist_ok=True)
   </div>
 </main>
 {% endblock %}''', encoding="utf-8")
+
+
+# XP CONNECT MOBILE EXPERIENCE/WIFI POLISH 2026-10-06
+from pathlib import Path as _XpPolishPath
+_polish_connect = _XpPolishPath("/app/app/templates/connect")
+_polish_connect.mkdir(parents=True, exist_ok=True)
+
+(_polish_connect / "feedback.html").write_text(r'''<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tu experiencia · {{ profile.name }}</title>
+<style>
+*{box-sizing:border-box}
+:root{--brand:{{ profile.brand_color or '#6b3b22' }}}
+body{margin:0;background:#f7f4f0;color:#171513;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:auto;padding:26px 18px 40px}
+.card{background:#fff;border-radius:26px;padding:24px;border:1px solid #e7dfd8;box-shadow:0 10px 30px rgba(34,24,17,.06)}
+.back{display:inline-block;margin-bottom:18px;color:#6b625c;text-decoration:none;font-weight:700}
+.k{display:block;font-size:12px;letter-spacing:.16em;font-weight:900;color:#6f655f;margin-bottom:10px}
+h1{font-size:31px;line-height:1.03;margin:0 0 14px;letter-spacing:-.025em}
+.muted{color:#756d67;font-size:17px;line-height:1.35;margin:0}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:24px 0}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale label{display:grid;place-items:center;min-height:58px;border:1.5px solid #ddd3cb;border-radius:16px;font-size:30px;color:#b9b9b9;cursor:pointer;transition:.12s ease;background:#fff}
+.scale label.active{background:#fff7d6;border-color:#f4b400;color:#f4b400;transform:translateY(-1px)}
+.field{margin-top:14px}
+.field label{display:block;font-size:14px;font-weight:800;color:#5f5751;margin:0 0 8px 3px}
+.field input,.field textarea{width:100%;border:1.5px solid #d9cec6;border-radius:16px;padding:14px;font:inherit;color:#171513;background:#fff;outline:none}
+.field input{height:54px}
+.field textarea{min-height:132px;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:#9d9590;opacity:1}
+.field input:focus,.field textarea:focus{border-color:#8e837b;box-shadow:0 0 0 3px rgba(0,0,0,.04)}
+.btn{width:100%;margin-top:18px;padding:17px 16px;border:0;border-radius:17px;background:var(--brand);font-weight:900;font-size:17px;box-shadow:0 8px 20px rgba(0,0,0,.10);cursor:pointer;opacity:.45;transition:.15s ease}
+.btn.ready{opacity:1;transform:translateY(-1px)}
+.ok{text-align:center;padding:28px 8px}.ok b{font-size:28px}.ok p{color:#756d67}
+@media(max-width:420px){.wrap{padding:24px 14px 36px}.card{padding:22px 18px}.scale{gap:6px}.scale label{min-height:54px;font-size:28px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a class="back" href="/connect/{{ profile.slug }}">← Volver</a>
+<section class="card">
+{% if saved %}
+<div class="ok"><b>Gracias por contarnos.</b><p>Tu comentario fue enviado directamente al negocio.</p></div>
+{% else %}
+<span class="k">EXPERIENCIA</span>
+<h1>{{ profile.feedback_prompt or '¿Cómo fue tu experiencia hoy?' }}</h1>
+<p class="muted">Esto se envía directamente al negocio y nos ayuda a asegurarnos de ofrecerte un buen servicio.</p>
+<form method="post" id="feedback-form">
+  <div class="scale" aria-label="Calificación de 1 a 5 estrellas">
+    {% for n in range(1,6) %}
+    <input id="r{{ n }}" name="rating" type="radio" value="{{ n }}" {% if n==1 %}required{% endif %}>
+    <label for="r{{ n }}" data-rating="{{ n }}" aria-label="{{ n }} estrella{% if n != 1 %}s{% endif %}">★</label>
+    {% endfor %}
+  </div>
+  <div class="field">
+    <label for="attendant">¿Quién te atendió? <span style="font-weight:600;color:#8d847e">(opcional)</span></label>
+    <input id="attendant" name="attendant" maxlength="120" placeholder="Nombre de la persona">
+  </div>
+  <div class="field">
+    <label for="comment">Cuéntanos sobre tu experiencia</label>
+    <textarea id="comment" name="comment" maxlength="2000" placeholder="¿Qué te gustó o qué podríamos mejorar?"></textarea>
+  </div>
+  <button class="btn" id="send-btn" type="submit" data-brand="{{ profile.brand_color or '#6b3b22' }}">Enviar experiencia</button>
+</form>
+<script>
+(function(){
+  const radios=[...document.querySelectorAll('.scale input')];
+  const labels=[...document.querySelectorAll('.scale label')];
+  const btn=document.getElementById('send-btn');
+
+  function paint(value){
+    labels.forEach((label,idx)=>label.classList.toggle('active',idx<value));
+    if(value>0) btn.classList.add('ready');
+  }
+  radios.forEach(r=>r.addEventListener('change',()=>paint(Number(r.value))));
+
+  function contrast(hex){
+    hex=(hex||'').replace('#','');
+    if(hex.length===3) hex=hex.split('').map(x=>x+x).join('');
+    if(hex.length!==6) return '#ffffff';
+    const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+    const yiq=(r*299+g*587+b*114)/1000;
+    return yiq>=150?'#171513':'#ffffff';
+  }
+  btn.style.color=contrast(btn.dataset.brand);
+})();
+</script>
+{% endif %}
+</section>
+</main>
+</body>
+</html>''', encoding="utf-8")
+
+(_polish_connect / "wifi.html").write_text(r'''<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wi-Fi · {{ profile.name }}</title>
+<style>
+*{box-sizing:border-box}
+:root{--brand:{{ profile.brand_color or '#6b3b22' }}}
+body{margin:0;background:#f7f4f0;color:#171513;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:auto;padding:26px 18px 40px}
+.card{background:#fff;border-radius:26px;padding:24px;border:1px solid #e7dfd8;box-shadow:0 10px 30px rgba(34,24,17,.06)}
+.back{display:inline-block;margin-bottom:18px;color:#6b625c;text-decoration:none;font-weight:700}
+.k{display:block;font-size:12px;letter-spacing:.16em;font-weight:900;color:#6f655f;margin-bottom:10px}
+h1{font-size:32px;line-height:1.05;margin:0 0 14px;letter-spacing:-.025em}
+.muted{color:#756d67;font-size:17px;line-height:1.35;margin:0}
+.row{margin-top:18px;padding:16px;border-radius:18px;background:#f7f4f0;border:1px solid #ebe4de}
+.row small{display:block;color:#756d67;margin-bottom:5px;font-size:14px;font-weight:700}
+.row b{font-size:20px;overflow-wrap:anywhere}
+.btn{display:block;text-align:center;text-decoration:none;width:100%;margin-top:16px;padding:17px 16px;border:0;border-radius:17px;background:var(--brand);font-weight:900;font-size:17px;box-shadow:0 8px 20px rgba(0,0,0,.10);cursor:pointer;transition:.15s ease}
+.btn:active{transform:scale(.99)}
+@media(max-width:420px){.wrap{padding:24px 14px 36px}.card{padding:22px 18px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a class="back" href="/connect/{{ profile.slug }}">← Volver</a>
+<section class="card">
+<span class="k">WI-FI</span>
+<h1>Conéctate a nuestra red</h1>
+<p class="muted">Busca esta red desde los ajustes de Wi-Fi de tu teléfono y copia la clave.</p>
+<div class="row"><small>Nombre de la red</small><b>{{ profile.wifi_ssid }}</b></div>
+{% if profile.wifi_note %}
+<div class="row"><small>Clave Wi-Fi</small><b id="wifi-key">{{ profile.wifi_note }}</b></div>
+<button class="btn" id="copy-btn" type="button" data-brand="{{ profile.brand_color or '#6b3b22' }}">Copiar clave</button>
+<script>
+(function(){
+  const btn=document.getElementById('copy-btn');
+  function contrast(hex){
+    hex=(hex||'').replace('#','');
+    if(hex.length===3) hex=hex.split('').map(x=>x+x).join('');
+    if(hex.length!==6) return '#ffffff';
+    const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+    return ((r*299+g*587+b*114)/1000)>=150?'#171513':'#ffffff';
+  }
+  btn.style.color=contrast(btn.dataset.brand);
+  btn.addEventListener('click',async function(){
+    const value=document.getElementById('wifi-key').textContent.trim();
+    try{
+      await navigator.clipboard.writeText(value);
+      btn.textContent='Clave copiada ✓';
+    }catch(e){
+      const ta=document.createElement('textarea');ta.value=value;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+      btn.textContent='Clave copiada ✓';
+    }
+    setTimeout(()=>btn.textContent='Copiar clave',1800);
+  });
+})();
+</script>
+{% endif %}
+</section>
+</main>
+</body>
+</html>''', encoding="utf-8")
+
+# Keep Wi-Fi configuration simple: remove the unused portal field from admin/business forms.
+for _form_path in [
+    _XpPolishPath("/app/app/templates/admin/connect_edit.html"),
+    _XpPolishPath("/app/app/templates/business/connect.html"),
+]:
+    if _form_path.exists():
+        _form = _form_path.read_text(encoding="utf-8")
+        import re as _xp_polish_re
+        _form = _xp_polish_re.sub(r'<label[^>]*>Portal Wi-Fi \(opcional\)<input[^>]*name="wifi_portal_url"[^>]*></label>', '', _form)
+        _form = _xp_polish_re.sub(r'<label[^>]*>Portal Wi-Fi<input[^>]*name="wifi_portal_url"[^>]*></label>', '', _form)
+        _form_path.write_text(_form, encoding="utf-8")
