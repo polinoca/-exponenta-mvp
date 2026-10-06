@@ -49,6 +49,15 @@ def xp_connect_ensure(db):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS button_border_color VARCHAR(16)"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS wifi_enabled INTEGER NOT NULL DEFAULT 0"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS wifi_ssid TEXT"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS wifi_note TEXT"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS wifi_portal_url TEXT"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS feedback_enabled INTEGER NOT NULL DEFAULT 0"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS feedback_prompt TEXT"))
+    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS organization_id INTEGER"))
+    db.execute(xp_sql_text("CREATE INDEX IF NOT EXISTS ix_exponenta_connect_profiles_org ON exponenta_connect_profiles(organization_id)"))
     db.execute(xp_sql_text("ALTER TABLE exponenta_connect_feedback ADD COLUMN IF NOT EXISTS attendant TEXT"))
     db.execute(xp_sql_text("""
         CREATE TABLE IF NOT EXISTS exponenta_connect_clicks (
