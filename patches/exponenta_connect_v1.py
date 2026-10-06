@@ -328,3 +328,89 @@ if "/* XP EXPONENTA CONNECT V1 */" not in css:
     cssp.write_text(css, encoding="utf-8")
 
 print("Exponenta Connect V1 installed")
+
+# EXPONENTA CONNECT PRINT MATERIAL V1
+from pathlib import Path as _XpPath
+_p = _XpPath("/app/app/main.py")
+_s = _p.read_text(encoding="utf-8")
+_anchor = '@app.get("/admin/connect/{slug}/editar", response_class=HTMLResponse)'
+if "def exponenta_connect_material" not in _s:
+    _block = r'''
+@app.get("/admin/connect/{slug}/material", response_class=HTMLResponse)
+def exponenta_connect_material(slug: str, request: Request, db: Session = Depends(get_db)):
+    user = control_superadmin(request, db)
+    xp_connect_ensure(db)
+    profile = db.execute(xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE slug=:slug"), {"slug": slug}).mappings().first()
+    if not profile:
+        raise HTTPException(404)
+    return render(request, "admin/connect_material.html", {"user": user, "profile": profile})
+'''
+    _s = _s.replace(_anchor, _block + "\\n" + _anchor, 1)
+    _p.write_text(_s, encoding="utf-8")
+
+_t = _XpPath("/app/app/templates/admin/connect.html")
+if _t.exists():
+    _x = _t.read_text(encoding="utf-8")
+    old = '<a href="/connect/{{ p.slug }}" target="_blank">Abrir</a><a href="/admin/connect/{{ p.slug }}/editar">Editar</a>'
+    new = '<a href="/connect/{{ p.slug }}" target="_blank">Abrir</a><a href="/admin/connect/{{ p.slug }}/material">QR / banner</a><a href="/admin/connect/{{ p.slug }}/editar">Editar</a>'
+    if old in _x:
+        _x = _x.replace(old,new)
+        _t.write_text(_x,encoding="utf-8")
+
+_XpPath("/app/app/templates/admin/connect_material.html").write_text(r'''{% extends "base.html" %}
+{% block title %}Material · {{ profile.name }}{% endblock %}
+{% block body %}
+<main class="container xp-connect-material-page">
+  <div class="xp-material-toolbar no-print">
+    <a href="/admin/connect">← Connect</a>
+    <div><button class="btn btn-secondary" type="button" onclick="downloadQR()">Descargar QR PNG</button><button class="btn btn-primary" type="button" onclick="window.print()">Imprimir / Guardar PDF</button></div>
+  </div>
+  <section class="xp-material-sheet">
+    <div class="xp-material-banner" style="--xp-brand:{{ profile.brand_color or '#6b3b22' }}">
+      <header>
+        {% if profile.logo_data %}<img src="{{ profile.logo_data }}" alt="{{ profile.name }}">{% else %}<div class="xp-material-logo">{{ profile.name[:1] }}</div>{% endif %}
+        <strong>{{ profile.name }}</strong>
+      </header>
+      <div class="xp-material-copy">
+        <span>EXPONENTA CONNECT</span>
+        <h1>Conéctate con nosotros</h1>
+        <p>Reseñas · WhatsApp · Instagram · Ubicación</p>
+      </div>
+      <div id="connect-qr" class="xp-material-qr"></div>
+      <div class="xp-material-tap"><b>⌁ NFC</b><span>Acerca tu celular o escanea el QR</span></div>
+      <footer>Powered by <b>Exponenta</b></footer>
+    </div>
+    <aside class="no-print">
+      <span class="eyebrow">QR NUEVO</span>
+      <h2>{{ profile.name }}</h2>
+      <p>Destino permanente:</p>
+      <code id="connect-url"></code>
+      <p>Este es el QR que debe imprimirse en el nuevo banner. El contenido del perfil puede cambiar después sin volver a imprimirlo.</p>
+    </aside>
+  </section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const target=location.origin+"/connect/{{ profile.slug }}";
+document.getElementById("connect-url").textContent=target;
+new QRCode(document.getElementById("connect-qr"),{text:target,width:360,height:360,correctLevel:QRCode.CorrectLevel.H});
+function downloadQR(){
+  const box=document.getElementById("connect-qr");
+  const canvas=box.querySelector("canvas");
+  const img=box.querySelector("img");
+  const url=canvas?canvas.toDataURL("image/png"):img.src;
+  const a=document.createElement("a");a.href=url;a.download="{{ profile.slug }}-exponenta-connect-qr.png";a.click();
+}
+</script>
+{% endblock %}''',encoding="utf-8")
+
+_cssp=_XpPath("/app/app/static/app.css")
+_css=_cssp.read_text(encoding="utf-8")
+if "/* XP CONNECT PRINT MATERIAL V1 */" not in _css:
+    _css += r'''
+/* XP CONNECT PRINT MATERIAL V1 */
+.xp-material-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:24px 0}.xp-material-toolbar>div{display:flex;gap:8px}.xp-material-sheet{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:28px;align-items:start}.xp-material-sheet aside{padding:24px;border:1px solid #e3d8cf;border-radius:20px;background:#fff}.xp-material-sheet code{display:block;overflow-wrap:anywhere;padding:10px;background:#f5f1ed;border-radius:10px}.xp-material-banner{aspect-ratio:105/148;background:#fff;border:1px solid #e4ddd6;border-radius:18px;padding:26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 18px 45px rgba(45,31,20,.1);position:relative;overflow:hidden}.xp-material-banner:before{content:"";position:absolute;inset:0 0 auto;height:12px;background:var(--xp-brand)}.xp-material-banner header{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px}.xp-material-banner header img,.xp-material-logo{width:54px;height:54px;border-radius:15px;object-fit:contain;background:#fff;border:1px solid #eee;display:grid;place-items:center;font-weight:900}.xp-material-banner header strong{font-size:1.05rem}.xp-material-copy{margin:22px 0 14px}.xp-material-copy span{font-size:.54rem;letter-spacing:.17em;font-weight:900;color:var(--xp-brand)}.xp-material-copy h1{font-size:1.7rem!important;line-height:1.02;margin:7px 0!important}.xp-material-copy p{font-size:.72rem;color:#6f655e;margin:0}.xp-material-qr{background:#fff;padding:10px;border-radius:14px;border:1px solid #eee}.xp-material-qr img,.xp-material-qr canvas{display:block!important;width:210px!important;height:210px!important}.xp-material-tap{display:grid;gap:2px;margin-top:12px}.xp-material-tap b{font-size:.78rem;color:var(--xp-brand)}.xp-material-tap span{font-size:.62rem;color:#796e67}.xp-material-banner footer{margin-top:auto;font-size:.58rem;color:#847a73}@media(max-width:760px){.xp-material-sheet{grid-template-columns:1fr}.xp-material-toolbar{align-items:flex-start;flex-direction:column}.xp-material-banner{max-width:430px;margin:auto}}@media print{body{background:#fff!important}.no-print,.xp-app-topbar,.xp-business-nav{display:none!important}.xp-connect-material-page{padding:0!important;margin:0!important;max-width:none!important}.xp-material-sheet{display:block}.xp-material-banner{width:105mm;height:148mm;box-sizing:border-box;border:0;border-radius:0;box-shadow:none;margin:0;page-break-after:avoid}.xp-material-qr img,.xp-material-qr canvas{width:52mm!important;height:52mm!important}}
+'''
+    _cssp.write_text(_css,encoding="utf-8")
+
+print("Exponenta Connect print material installed")
