@@ -40,6 +40,15 @@ def xp_connect_ensure(db):
         )
     """))
     db.execute(xp_sql_text("""
+        CREATE TABLE IF NOT EXISTS exponenta_connect_feedback (
+            id BIGSERIAL PRIMARY KEY,
+            slug VARCHAR(80) NOT NULL,
+            rating INTEGER,
+            comment TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    db.execute(xp_sql_text("""
         CREATE TABLE IF NOT EXISTS exponenta_connect_clicks (
             slug VARCHAR(80) NOT NULL,
             kind VARCHAR(40) NOT NULL,
