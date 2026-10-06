@@ -155,6 +155,42 @@ def exponenta_connect_vcard(slug: str, db: Session = Depends(get_db)):
     db.commit()
     return Response("\r\n".join(lines), media_type="text/vcard", headers={"Content-Disposition": f'attachment; filename="{slug}.vcf"'})
 
+
+@app.get("/connect/{slug}/wifi", response_class=HTMLResponse)
+def exponenta_connect_wifi_page(slug: str, request: Request, db: Session = Depends(get_db)):
+    profile = xp_connect_profile(db, slug)
+    if not profile or not profile.get("wifi_enabled") or not (profile.get("wifi_ssid") or "").strip():
+        raise HTTPException(404, "Wi-Fi no configurado")
+    return render(request, "connect/wifi.html", {"profile": profile})
+
+@app.get("/connect/{slug}/experiencia", response_class=HTMLResponse)
+def exponenta_connect_feedback_page(slug: str, request: Request, db: Session = Depends(get_db)):
+    profile = xp_connect_profile(db, slug)
+    if not profile or not profile.get("feedback_enabled"):
+        raise HTTPException(404, "Experiencia no configurada")
+    return render(request, "connect/feedback.html", {"profile": profile, "saved": False})
+
+@app.post("/connect/{slug}/experiencia")
+def exponenta_connect_feedback_save(
+    slug: str,
+    request: Request,
+    rating: int = Form(...),
+    comment: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    profile = xp_connect_profile(db, slug)
+    if not profile or not profile.get("feedback_enabled"):
+        raise HTTPException(404, "Experiencia no configurada")
+    if rating < 1 or rating > 5:
+        raise HTTPException(422, "Calificación inválida")
+    db.execute(
+        xp_sql_text("INSERT INTO exponenta_connect_feedback(slug,rating,comment) VALUES (:slug,:rating,:comment)"),
+        {"slug": slug, "rating": rating, "comment": comment.strip()[:2000]},
+    )
+    db.execute(xp_sql_text("INSERT INTO exponenta_connect_clicks(slug,kind) VALUES (:slug,'feedback')"), {"slug": slug})
+    db.commit()
+    return render(request, "connect/feedback.html", {"profile": profile, "saved": True})
+
 @app.get("/admin/connect", response_class=HTMLResponse)
 def exponenta_connect_admin(request: Request, db: Session = Depends(get_db)):
     user = control_superadmin(request, db)
@@ -369,12 +405,23 @@ tpldir.mkdir(parents=True, exist_ok=True)
     {% if profile.facebook_url %}
     <a class="xp-action xp-facebook" href="/connect/{{ profile.slug }}/go/facebook"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#1877F2"/><path fill="#fff" d="M18.1 27V17.2h3.3l.5-3.8h-3.8V11c0-1.1.3-1.8 1.9-1.8h2V5.8c-.4-.1-1.6-.2-3-.2-3 0-5.1 1.9-5.1 5.3v2.5h-3.4v3.8h3.4V27z"/></svg></span><span class="xp-copy"><b>Facebook</b><small>Conoce más del negocio</small></span><span class="xp-arrow">›</span></a>
     {% endif %}
+    {% if profile.wifi_enabled and profile.wifi_ssid %}
+    <a class="xp-action xp-wifi" href="/connect/{{ profile.slug }}/wifi"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M2.8 8.5a14.5 14.5 0 0118.4 0M5.8 12a9.8 9.8 0 0112.4 0M9 15.5a5 5 0 016 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></span><span class="xp-copy"><b>Conectarse al Wi-Fi</b><small>Ver red y acceso</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
+    {% if profile.feedback_enabled %}
+    <a class="xp-action xp-feedback" href="/connect/{{ profile.slug }}/experiencia"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 4h16v12H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span><span class="xp-copy"><b>¿Cómo fue tu experiencia?</b><small>Cuéntanos de forma privada</small></span><span class="xp-arrow">›</span></a>
+    {% endif %}
     <a class="xp-action xp-save" href="/connect/{{ profile.slug }}/contact.vcf"><span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/><path d="M19 4v5M16.5 6.5h5"/></svg></span><span class="xp-copy"><b>Guardar contacto</b><small>Agrega el negocio a tu celular</small></span><span class="xp-arrow">›</span></a>
   </section>
   <footer class="xp-foot">Conectado por <b>Exponenta</b></footer>
 </main>
 </body>
 </html>''', encoding="utf-8")
+
+
+(Path("/app/app/templates/connect") / "wifi.html").write_text(r'''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Wi-Fi · {{ profile.name }}</title><style>*{box-sizing:border-box}body{margin:0;background:#f7f4f0;color:#171513;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Arial,sans-serif}.wrap{max-width:520px;margin:auto;padding:26px 18px}.card{background:#fff;border-radius:26px;padding:24px;border:1px solid #e7dfd8;box-shadow:0 10px 30px rgba(34,24,17,.06)}.back{display:inline-block;margin-bottom:18px;color:#6b625c;text-decoration:none}.k{font-size:11px;letter-spacing:.15em;font-weight:800;color:{{ profile.brand_color or '#6b3b22' }}}h1{font-size:32px;margin:7px 0 8px}.muted{color:#756d67}.row{margin-top:18px;padding:15px;border-radius:18px;background:#f7f4f0}.row small{display:block;color:#80766f;margin-bottom:5px}.row b{font-size:18px;overflow-wrap:anywhere}.btn{display:block;text-align:center;text-decoration:none;width:100%;margin-top:14px;padding:15px;border-radius:16px;background:{{ profile.brand_color or '#6b3b22' }};color:#fff;font-weight:800;font-size:16px}.note{margin-top:14px;color:#756d67;font-size:14px}</style></head><body><main class="wrap"><a class="back" href="/connect/{{ profile.slug }}">← Volver</a><section class="card"><span class="k">WI-FI</span><h1>Conéctate a nuestra red</h1><p class="muted">Busca esta red desde los ajustes de Wi-Fi de tu teléfono.</p><div class="row"><small>Nombre de la red</small><b>{{ profile.wifi_ssid }}</b></div>{% if profile.wifi_note %}<p class="note">{{ profile.wifi_note }}</p>{% endif %}{% if profile.wifi_portal_url %}<a class="btn" href="{{ profile.wifi_portal_url }}" target="_blank" rel="noopener">Abrir portal Wi-Fi</a>{% endif %}</section></main></body></html>''', encoding="utf-8")
+
+(Path("/app/app/templates/connect") / "feedback.html").write_text(r'''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Tu experiencia · {{ profile.name }}</title><style>*{box-sizing:border-box}body{margin:0;background:#f7f4f0;color:#171513;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Arial,sans-serif}.wrap{max-width:520px;margin:auto;padding:26px 18px}.card{background:#fff;border-radius:26px;padding:24px;border:1px solid #e7dfd8;box-shadow:0 10px 30px rgba(34,24,17,.06)}.back{display:inline-block;margin-bottom:18px;color:#6b625c;text-decoration:none}.k{font-size:11px;letter-spacing:.15em;font-weight:800;color:{{ profile.brand_color or '#6b3b22' }}}h1{font-size:30px;line-height:1.05;margin:7px 0 10px}.muted{color:#756d67}.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:22px 0}.scale input{display:none}.scale label{display:grid;place-items:center;min-height:52px;border:1px solid #ddd3cb;border-radius:14px;font-size:26px;color:#bbb;cursor:pointer}.scale input:checked+label{background:#fff7d6;border-color:#f4b400;color:#f4b400}textarea{width:100%;min-height:120px;border:1px solid #ddd3cb;border-radius:16px;padding:14px;font:inherit;resize:vertical}.btn{width:100%;margin-top:14px;padding:15px;border:0;border-radius:16px;background:{{ profile.brand_color or '#6b3b22' }};color:#fff;font-weight:800;font-size:16px}.ok{text-align:center;padding:28px 8px}.ok b{font-size:28px}.ok p{color:#756d67}</style></head><body><main class="wrap"><a class="back" href="/connect/{{ profile.slug }}">← Volver</a><section class="card">{% if saved %}<div class="ok"><b>Gracias por contarnos.</b><p>Tu comentario fue enviado de forma privada al negocio.</p></div>{% else %}<span class="k">EXPERIENCIA</span><h1>{{ profile.feedback_prompt or '¿Cómo fue tu experiencia hoy?' }}</h1><p class="muted">Esto se envía directamente al negocio y no se publica en Google.</p><form method="post"><div class="scale">{% for n in range(1,6) %}<input id="r{{ n }}" name="rating" type="radio" value="{{ n }}" {% if n==5 %}required{% endif %}><label for="r{{ n }}">★</label>{% endfor %}</div><textarea name="comment" maxlength="2000" placeholder="Cuéntanos qué te gustó o qué podemos mejorar."></textarea><button class="btn" type="submit">Enviar experiencia</button></form>{% endif %}</section></main></body></html>''', encoding="utf-8")
 
 adm = Path("/app/app/templates/admin")
 (adm / "connect.html").write_text(r'''{% extends "base.html" %}
