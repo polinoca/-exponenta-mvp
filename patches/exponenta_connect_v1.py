@@ -755,3 +755,56 @@ for _f in _XpPath2("/app/app/templates/business").glob("*.html"):
         _f.write_text(_t,encoding="utf-8")
 
 print("Business Connect access installed")
+
+
+# XP CONNECT UI/SAVE HOTFIX 2026-10-06
+from pathlib import Path as _XpFixPath
+_m = _XpFixPath("/app/app/main.py")
+_ms = _m.read_text(encoding="utf-8")
+
+_old_sig = '''    brand_color: str = Form("#6b3b22"),
+    google_url: str = Form(""),'''
+_new_sig = '''    brand_color: str = Form("#6b3b22"),
+    button_border_color: str = Form("#e4ddd7"),
+    wifi_enabled: str = Form("0"),
+    wifi_ssid: str = Form(""),
+    wifi_note: str = Form(""),
+    wifi_portal_url: str = Form(""),
+    feedback_enabled: str = Form("0"),
+    feedback_prompt: str = Form(""),
+    google_url: str = Form(""),'''
+if _old_sig in _ms:
+    _ms = _ms.replace(_old_sig, _new_sig, 1)
+_m.write_text(_ms, encoding="utf-8")
+
+_ed = _XpFixPath("/app/app/templates/admin/connect_edit.html")
+if _ed.exists():
+    _e = _ed.read_text(encoding="utf-8")
+    _e = _e.replace('</label>\\n      <label>Color del marco de botones', '</label>\n      <label>Color del marco de botones')
+    _e = _e.replace('Nota Wi-Fi<input name="wifi_note" placeholder="Ej. Solicita la clave al personal"', 'Clave Wi-Fi<input name="wifi_note" placeholder="Ej. linopo2026"')
+    _ed.write_text(_e, encoding="utf-8")
+
+_lst = _XpFixPath("/app/app/templates/admin/connect.html")
+if _lst.exists():
+    _l = _lst.read_text(encoding="utf-8")
+    _l = _l.replace('/connect/{{ p.slug }} · {{ p.clicks }} clics', '{{ p.clicks }} clics')
+    _lst.write_text(_l, encoding="utf-8")
+
+_wf = _XpFixPath("/app/app/templates/connect/wifi.html")
+if _wf.exists():
+    _w = _wf.read_text(encoding="utf-8")
+    _w = _w.replace('Busca esta red desde los ajustes de Wi-Fi de tu teléfono.', 'Busca esta red desde los ajustes de Wi-Fi de tu teléfono y copia la clave.')
+    _w = _w.replace('{% if profile.wifi_note %}<p class="note">{{ profile.wifi_note }}</p>{% endif %}', '''{% if profile.wifi_note %}<div class="row"><small>Clave Wi-Fi</small><b id="wifi-key">{{ profile.wifi_note }}</b></div><button class="btn" type="button" onclick="navigator.clipboard.writeText(document.getElementById('wifi-key').textContent);this.textContent='Clave copiada ✓'">Copiar clave</button>{% endif %}''')
+    _wf.write_text(_w, encoding="utf-8")
+
+_css = _XpFixPath("/app/app/static/app.css")
+if _css.exists():
+    _cs = _css.read_text(encoding="utf-8")
+    if "/* XP CONNECT ADMIN HOTFIX */" not in _cs:
+        _cs += r'''
+/* XP CONNECT ADMIN HOTFIX */
+.xp-connect-table article{grid-template-columns:64px minmax(180px,1fr) auto auto auto auto!important;align-items:center;gap:12px}
+.xp-connect-table article>a{display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap;padding:8px 10px;border-radius:10px;text-decoration:none}
+@media(max-width:760px){.xp-connect-table article{grid-template-columns:52px 1fr!important}.xp-connect-table article>a{grid-column:auto;justify-content:flex-start;padding:6px 0}}
+'''
+        _css.write_text(_cs, encoding="utf-8")
