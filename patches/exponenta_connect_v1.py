@@ -359,14 +359,24 @@ tpldir.mkdir(parents=True, exist_ok=True)
     .xp-action:active{transform:scale(.986);box-shadow:0 3px 12px rgba(34,24,17,.05)}
     .xp-icon{width:46px;height:46px;border-radius:14px;background:#faf8f6;display:grid;place-items:center}
     .xp-icon svg,.xp-icon img{width:29px;height:29px;display:block}
-    .xp-copy{min-width:0}.xp-copy b{display:block;font-size:18px;line-height:1.08;letter-spacing:-.012em}.xp-copy small{display:block;margin-top:5px;color:var(--muted);font-size:13.5px;line-height:1.2;font-weight:520}
+    .xp-copy{min-width:0}.xp-copy b{display:block;font-size:18px;line-height:1.08;letter-spacing:-.012em;color:var(--ink)}.xp-copy small{display:block;margin-top:5px;color:var(--muted);font-size:13.5px;line-height:1.2;font-weight:520}
     .xp-arrow{font-size:30px;line-height:1;color:#aaa19a;text-align:right}
-    .xp-google{border:2px solid var(--brand);background:#fff;box-shadow:0 10px 28px rgba(34,24,17,.07)}
-    .xp-google .xp-copy b{color:var(--brand)}
+    .xp-google{border:1.5px solid var(--border);background:#fff;box-shadow:0 10px 28px rgba(34,24,17,.07)}
+    .xp-google .xp-copy b{color:var(--ink)}
     .xp-stars{display:flex;gap:2px;margin-top:7px}
     .xp-stars svg{width:15px;height:15px;fill:#f4b400}
-    .xp-whatsapp .xp-icon{background:#eefbf3}.xp-instagram .xp-icon{background:#fff5fb}
-    .xp-save .xp-icon,.xp-map .xp-icon,.xp-call .xp-icon,.xp-web .xp-icon,.xp-booking .xp-icon,.xp-menu .xp-icon,.xp-facebook .xp-icon{color:var(--brand)}
+    .xp-google .xp-icon{background:#fff}
+    .xp-whatsapp .xp-icon{background:#eefbf3}
+    .xp-instagram .xp-icon{background:#fff5fb}
+    .xp-map .xp-icon{background:#fff1ef;color:#EA4335}
+    .xp-call .xp-icon{background:#effaf2;color:#16A34A}
+    .xp-web .xp-icon{background:#eff6ff;color:#2563EB}
+    .xp-booking .xp-icon{background:#f5f0ff;color:#7C3AED}
+    .xp-menu .xp-icon{background:#fff7ed;color:#D97706}
+    .xp-wifi .xp-icon{background:#f3f4f6;color:#111827}
+    .xp-feedback .xp-icon{background:#f5f0ff;color:#7C3AED}
+    .xp-save .xp-icon{background:#ecfdf5;color:#0F766E}
+    .xp-facebook .xp-icon{background:#eef5ff;color:#1877F2}
     .xp-foot{text-align:center;padding:25px 6px 4px;color:#958c85;font-size:12px}.xp-foot b{color:#6f665f}
     @media(max-width:420px){
       .xp-page{padding-left:14px;padding-right:14px}.xp-logo{width:72px;height:72px}.xp-head{gap:13px}.xp-head h1{font-size:31px}.xp-action{min-height:84px;padding:14px 14px;border-radius:21px}.xp-icon{width:44px;height:44px}.xp-copy b{font-size:17px}.xp-copy small{font-size:13px}
