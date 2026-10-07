@@ -190,3 +190,34 @@ if _pos>=0:
         _ms=_ms[:_pos]+_tail
 _mp.write_text(_ms,encoding="utf-8")
 print("Create business access CSRF fallback installed")
+
+# XP ACCESS AUTOFILL UX FIX V1
+from pathlib import Path as _XpUxPath
+_tp=_XpUxPath("/app/app/templates/admin/control_business.html")
+_ht=_tp.read_text(encoding="utf-8")
+_ht=_ht.replace(
+  '<form method="post" action="/admin/control/{{ organization.id }}/usuario/crear">',
+  '<form method="post" action="/admin/control/{{ organization.id }}/usuario/crear" autocomplete="off">'
+)
+_ht=_ht.replace(
+  '<label>Correo de acceso<input type="email" name="access_email" placeholder="cliente@negocio.com" required></label>',
+  '<label>Correo de acceso<input type="email" name="access_email" value="" placeholder="cliente@negocio.com" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>'
+)
+_ht=_ht.replace(
+  '<label>Contraseña temporal<input type="password" name="temporary_password" minlength="10" required></label>',
+  '<label>Contraseña temporal<input type="password" name="temporary_password" minlength="10" autocomplete="new-password" required></label>'
+)
+_ht=_ht.replace(
+  '<label>Confirmar contraseña<input type="password" name="password_confirmation" minlength="10" required></label>',
+  '<label>Confirmar contraseña<input type="password" name="password_confirmation" minlength="10" autocomplete="new-password" required></label>'
+)
+_ht=_ht.replace(
+  '{% if access_error == "exists" %}<div class="xp-auth-message warning">Este negocio ya tiene ese usuario.</div>{% endif %}',
+  '{% if access_error == "exists" %}<div class="xp-auth-message warning">Ese correo ya está asociado a este negocio. No crees otro acceso; usa la sección para restablecer contraseña.</div>{% endif %}'
+)
+_ht=_ht.replace(
+  '{% if access_error == "email_used" %}<div class="xp-auth-message warning">Ese correo ya pertenece a otra cuenta.</div>{% endif %}',
+  '{% if access_error == "email_used" %}<div class="xp-auth-message warning">Ese correo ya pertenece a otra cuenta de Exponenta. Usa un correo propio del cliente.</div>{% endif %}'
+)
+_tp.write_text(_ht,encoding="utf-8")
+print("Access form autofill and error UX fixed")
