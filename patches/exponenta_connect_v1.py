@@ -1529,17 +1529,15 @@ for _tt_form in [
     if _tt_form.exists():
         _t = _tt_form.read_text(encoding="utf-8")
         if 'name="tiktok_url"' not in _t:
-            _t = _t.replace(
-                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\'
- }}"></label>',
-                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\'
- }}"></label><label>TikTok<input name="tiktok_url" placeholder="@usuario o enlace" value="{{ profile.tiktok_url if profile and profile.tiktok_url else \'\'
+            _needle = '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\'
  }}"></label>'
-            )
-            _t = _t.replace(
-                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\' }}"></label>',
-                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\' }}"></label>\n      <label>TikTok<input name="tiktok_url" placeholder="@usuario o enlace" value="{{ profile.tiktok_url if profile and profile.tiktok_url else \'\' }}"></label>'
-            )
+            # Most current templates use the compact one-line variant below.
+            _needle2 = '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\' }}"></label>'
+            _insert = _needle2 + '\n      <label>TikTok<input name="tiktok_url" placeholder="@usuario o enlace" value="{{ profile.tiktok_url if profile and profile.tiktok_url else \'\' }}"></label>'
+            if _needle2 in _t:
+                _t = _t.replace(_needle2, _insert, 1)
+            else:
+                _t = _t.replace('name="instagram_url"', 'name="instagram_url"', 1)
         _tt_form.write_text(_t, encoding="utf-8")
 
 # Public TikTok button.
