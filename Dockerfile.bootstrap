@@ -112,7 +112,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/google_wallet_public_site.py \
     && python /bootstrap/patches/exponenta_connect_v1.py \
     && python /bootstrap/patches/superadmin_role_normalization.py \
-    && python /bootstrap/patches/unified_client_control.py
+    && python /bootstrap/patches/unified_client_control.py \
+    && python /bootstrap/patches/unified_client_control_v2.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
