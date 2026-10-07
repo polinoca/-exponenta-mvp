@@ -221,3 +221,134 @@ _ht=_ht.replace(
 )
 _tp.write_text(_ht,encoding="utf-8")
 print("Access form autofill and error UX fixed")
+
+# XP CONNECT PROFILE LINK V1
+from pathlib import Path as _XpLinkPath
+_mp=_XpLinkPath("/app/app/main.py")
+_ms=_mp.read_text(encoding="utf-8")
+
+# Add list of available Connect profiles to client control context.
+_start=_ms.find('def admin_control_business(')
+_end=_ms.find('\n\n@app.',_start)
+if _start>=0 and _end>_start:
+    _block=_ms[_start:_end]
+    if 'available_connect_profiles=' not in _block:
+        marker='connect_code=None'
+        enrich='''available_connect_profiles=db.execute(
+  xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE organization_id IS NULL OR organization_id=:org_id ORDER BY name"),
+  {"org_id":org.id},
+ ).mappings().all()
+ '''
+        if marker in _block:
+            _block=_block.replace(marker,enrich+marker,1)
+        # Inject into render context dictionary.
+        if '"connect_profile":connect_profile' in _block and '"available_connect_profiles":available_connect_profiles' not in _block:
+            _block=_block.replace(
+                '"connect_profile":connect_profile,"connect_code":connect_code',
+                '"connect_profile":connect_profile,"connect_code":connect_code,"available_connect_profiles":available_connect_profiles',
+                1
+            )
+        _ms=_ms[:_start]+_block+_ms[_end:]
+
+# Add safe linking endpoint.
+if 'def admin_link_connect_profile(' not in _ms:
+    anchor='@app.post("/admin/control/{org_id}/usuario/crear")'
+    route=r'''@app.post("/admin/control/{org_id}/connect/vincular")
+def admin_link_connect_profile(
+    org_id: int,
+    request: Request,
+    connect_slug: str = Form(...),
+    csrf_token: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    control_superadmin(request, db)
+    origin=(request.headers.get("origin") or "").rstrip("/")
+    referer=request.headers.get("referer") or ""
+    base=str(request.base_url).rstrip("/")
+    if origin and origin != base: raise HTTPException(403,"Solicitud no válida")
+    if not origin and not referer.startswith(base+"/"): raise HTTPException(403,"Solicitud no válida")
+    if csrf_token: verify_csrf(request, csrf_token)
+    org=db.get(Organization,org_id)
+    if not org: raise HTTPException(404,"Negocio no encontrado")
+    xp_connect_ensure_org_column(db)
+    profile=db.execute(
+        xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE slug=:slug"),
+        {"slug":connect_slug.strip()},
+    ).mappings().first()
+    if not profile: raise HTTPException(404,"Perfil Connect no encontrado")
+    current_org=profile.get("organization_id")
+    if current_org and int(current_org)!=org_id:
+        return RedirectResponse(f"/admin/control/{org_id}?connect_link_error=assigned",status_code=303)
+    db.execute(
+        xp_sql_text("UPDATE exponenta_connect_profiles SET organization_id=:org_id WHERE slug=:slug"),
+        {"org_id":org_id,"slug":profile["slug"]},
+    )
+    db.commit()
+    return RedirectResponse(f"/admin/control/{org_id}?connect_linked=1",status_code=303)
+
+'''
+    if anchor in _ms:
+        _ms=_ms.replace(anchor,route+anchor,1)
+
+# Add query flags to route.
+needle='access_created=request.query_params.get("access_created","")'
+if needle in _ms and 'connect_linked=request.query_params.get("connect_linked","")' not in _ms:
+    _ms=_ms.replace(
+      needle,
+      needle+';connect_linked=request.query_params.get("connect_linked","");connect_link_error=request.query_params.get("connect_link_error","")',
+      1
+    )
+if '"access_created":access_created' in _ms and '"connect_linked":connect_linked' not in _ms:
+    _ms=_ms.replace(
+      '"access_created":access_created',
+      '"access_created":access_created,"connect_linked":connect_linked,"connect_link_error":connect_link_error',
+      1
+    )
+
+_mp.write_text(_ms,encoding="utf-8")
+
+_tp=_XpLinkPath("/app/app/templates/admin/control_business.html")
+_ht=_tp.read_text(encoding="utf-8")
+if "EXPONENTA CONNECT PROFILE LINK V1" not in _ht:
+    old='''{% else %}
+        <strong>Sin perfil Connect</strong>
+        <span>Créalo y asígnalo a este negocio.</span>
+        <a class="btn btn-secondary" href="/admin/connect/nuevo">Crear Connect</a>
+      {% endif %}'''
+    new='''{% else %}
+        <strong>Sin perfil Connect vinculado</strong>
+        <span>Si ya existe, vincúlalo; no necesitas volver a crearlo.</span>
+        {% if connect_linked %}<div class="xp-auth-message success">Perfil Connect vinculado.</div>{% endif %}
+        {% if connect_link_error == "assigned" %}<div class="xp-auth-message warning">Ese perfil ya está vinculado a otro negocio.</div>{% endif %}
+        {% if available_connect_profiles %}
+        <form class="xp-connect-link-form" method="post" action="/admin/control/{{ organization.id }}/connect/vincular">
+          <input type="hidden" name="csrf_token" value="{{ csrf }}">
+          <select name="connect_slug" required>
+            <option value="">Selecciona perfil existente</option>
+            {% for cp in available_connect_profiles %}
+              <option value="{{ cp.slug }}">{{ cp.name }} · /connect/{{ cp.slug }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-primary" type="submit">Vincular perfil</button>
+        </form>
+        {% endif %}
+        <a class="btn btn-secondary" href="/admin/connect/nuevo">Crear nuevo</a>
+      {% endif %}'''
+    if old in _ht:
+        _ht=_ht.replace(old,new,1)
+    _ht=_ht.replace(
+      '<!-- EXPONENTA UNIFIED CONNECT CONTROL V1 -->',
+      '<!-- EXPONENTA UNIFIED CONNECT CONTROL V1 -->\n<!-- EXPONENTA CONNECT PROFILE LINK V1 -->',
+      1
+    )
+_tp.write_text(_ht,encoding="utf-8")
+
+_cssp=_XpLinkPath("/app/app/static/app.css")
+_css=_cssp.read_text(encoding="utf-8")
+if "/* XP CONNECT PROFILE LINK V1 */" not in _css:
+    _css+=r'''
+/* XP CONNECT PROFILE LINK V1 */
+.xp-connect-link-form{display:grid;gap:7px;margin-top:8px}.xp-connect-link-form select{min-height:42px;padding:0 10px;border:1px solid #d9cec5;border-radius:10px;background:#fff;font:inherit;font-size:.75rem}
+'''
+    _cssp.write_text(_css,encoding="utf-8")
+print("Connect existing-profile linker installed")
