@@ -162,3 +162,31 @@ if "/* XP SIMPLE ACCESS V1 */" not in c:
 '''
 css.write_text(c,encoding="utf-8")
 print("Simplified client access and unified account creation installed")
+
+# XP CREATE ACCESS CSRF FIX V1
+from pathlib import Path as _XpAccessPath
+_mp=_XpAccessPath("/app/app/main.py")
+_ms=_mp.read_text(encoding="utf-8")
+_old='''    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    control_superadmin(request, db)
+    verify_csrf(request, csrf_token)'''
+_new='''    csrf_token: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    control_superadmin(request, db)
+    origin=(request.headers.get("origin") or "").rstrip("/")
+    referer=request.headers.get("referer") or ""
+    base=str(request.base_url).rstrip("/")
+    if origin and origin != base: raise HTTPException(403,"Solicitud no válida")
+    if not origin and not referer.startswith(base+"/"): raise HTTPException(403,"Solicitud no válida")
+    if csrf_token: verify_csrf(request, csrf_token)'''
+_pos=_ms.find('def admin_create_business_access(')
+if _pos>=0:
+    _tail=_ms[_pos:]
+    if _old in _tail:
+        _tail=_tail.replace(_old,_new,1)
+        _ms=_ms[:_pos]+_tail
+_mp.write_text(_ms,encoding="utf-8")
+print("Create business access CSRF fallback installed")
