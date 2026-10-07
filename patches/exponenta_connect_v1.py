@@ -1603,3 +1603,21 @@ else:
     )
 _mp.write_text(_ms,encoding="utf-8")
 print("Connect code assignment parameter type fix applied")
+
+# XP BUSINESS CONNECT MISSING FORM FIELDS FIX V1
+from pathlib import Path as _XpBizFixPath
+_p=_XpBizFixPath("/app/app/main.py")
+_s=_p.read_text(encoding="utf-8")
+start=_s.find('async def business_connect_save(')
+end=_s.find('\n\n@app.', start)
+if start>=0 and end>start:
+    block=_s[start:end]
+    if 'button_border_color: str = Form(' not in block:
+        block=block.replace(
+            'brand_color: str = Form("#6b3b22"),',
+            'brand_color: str = Form("#6b3b22"),\n    button_border_color: str = Form("#e4ddd7"),\n    wifi_enabled: str = Form("0"),\n    wifi_ssid: str = Form(""),\n    wifi_note: str = Form(""),\n    wifi_portal_url: str = Form(""),\n    feedback_enabled: str = Form("0"),\n    feedback_prompt: str = Form("¿Cómo fue tu experiencia hoy?"),',
+            1
+        )
+    _s=_s[:start]+block+_s[end:]
+_p.write_text(_s,encoding="utf-8")
+print("Business Connect missing form fields fixed")
