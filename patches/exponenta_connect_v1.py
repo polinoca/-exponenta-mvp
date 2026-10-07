@@ -1585,3 +1585,21 @@ for _tt_form in [
         _tt_form.write_text(_t, encoding="utf-8")
 
 print("Exponenta Connect TikTok installed")
+
+# XP CONNECT CODE ASSIGN TYPE FIX V1
+from pathlib import Path as _XpFixPath
+_mp=_XpFixPath("/app/app/main.py")
+_ms=_mp.read_text(encoding="utf-8")
+_old="""SET assigned_slug=:slug,
+                assigned_at=CASE WHEN :slug='' THEN NULL ELSE CURRENT_TIMESTAMP END"""
+_new="""SET assigned_slug=CAST(:slug AS VARCHAR),
+                assigned_at=CASE WHEN CAST(:slug AS VARCHAR)='' THEN NULL ELSE CURRENT_TIMESTAMP END"""
+if _old in _ms:
+    _ms=_ms.replace(_old,_new)
+else:
+    _ms=_ms.replace(
+        "SET assigned_slug=:slug,\\n            assigned_at=CASE WHEN :slug='' THEN NULL ELSE CURRENT_TIMESTAMP END",
+        "SET assigned_slug=CAST(:slug AS VARCHAR),\\n            assigned_at=CASE WHEN CAST(:slug AS VARCHAR)='' THEN NULL ELSE CURRENT_TIMESTAMP END"
+    )
+_mp.write_text(_ms,encoding="utf-8")
+print("Connect code assignment parameter type fix applied")
