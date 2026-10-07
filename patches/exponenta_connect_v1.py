@@ -1445,3 +1445,150 @@ if _admin_connect.exists():
         _admin_connect.write_text(_ac, encoding="utf-8")
 
 print("Exponenta Connect preassigned physical codes installed")
+
+
+# XP CONNECT TIKTOK 2026-10-07
+from pathlib import Path as _XpTikTokPath
+_tt_main = _XpTikTokPath("/app/app/main.py")
+_tt_s = _tt_main.read_text(encoding="utf-8")
+
+# Schema migration.
+_tt_anchor = 'db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS organization_id INTEGER"))'
+if 'ADD COLUMN IF NOT EXISTS tiktok_url TEXT' not in _tt_s and _tt_anchor in _tt_s:
+    _tt_s = _tt_s.replace(
+        _tt_anchor,
+        'db.execute(xp_sql_text("ALTER TABLE exponenta_connect_profiles ADD COLUMN IF NOT EXISTS tiktok_url TEXT"))\n    ' + _tt_anchor,
+        1,
+    )
+
+# TikTok normalizer.
+if 'def xp_connect_tiktok' not in _tt_s:
+    _helper_anchor = 'def xp_connect_whatsapp(value: str) -> str:'
+    _helper = r'''def xp_connect_tiktok(value: str) -> str:
+    value = (value or "").strip()
+    if not value:
+        return ""
+    if value.startswith("@"):
+        return "https://www.tiktok.com/@" + value[1:]
+    if "/" not in value and "." not in value:
+        return "https://www.tiktok.com/@" + value.lstrip("@")
+    return xp_connect_url(value)
+
+'''
+    _tt_s = _tt_s.replace(_helper_anchor, _helper + _helper_anchor, 1)
+
+# Redirect action.
+if '"tiktok": "tiktok_url"' not in _tt_s:
+    _tt_s = _tt_s.replace(
+        '"instagram": "instagram_url",',
+        '"instagram": "instagram_url",\n        "tiktok": "tiktok_url",',
+        1,
+    )
+
+# Add to save signatures (admin + business).
+_tt_s = _tt_s.replace(
+    '    instagram_url: str = Form(""),\n    maps_url:',
+    '    instagram_url: str = Form(""),\n    tiktok_url: str = Form(""),\n    maps_url:',
+)
+
+# Add to save dictionaries.
+_tt_s = _tt_s.replace(
+    '"instagram_url": xp_connect_instagram(instagram_url), "maps_url":',
+    '"instagram_url": xp_connect_instagram(instagram_url), "tiktok_url": xp_connect_tiktok(tiktok_url), "maps_url":',
+)
+_tt_s = _tt_s.replace(
+    '"whatsapp":xp_connect_whatsapp(whatsapp),"instagram_url":xp_connect_instagram(instagram_url),\n      "maps_url":',
+    '"whatsapp":xp_connect_whatsapp(whatsapp),"instagram_url":xp_connect_instagram(instagram_url),"tiktok_url":xp_connect_tiktok(tiktok_url),\n      "maps_url":',
+)
+
+# Admin SQL.
+_tt_s = _tt_s.replace(
+    'google_url,whatsapp,instagram_url,maps_url',
+    'google_url,whatsapp,instagram_url,tiktok_url,maps_url',
+)
+_tt_s = _tt_s.replace(
+    ':google_url,:whatsapp,:instagram_url,:maps_url',
+    ':google_url,:whatsapp,:instagram_url,:tiktok_url,:maps_url',
+)
+_tt_s = _tt_s.replace(
+    'whatsapp=EXCLUDED.whatsapp, instagram_url=EXCLUDED.instagram_url, maps_url=EXCLUDED.maps_url',
+    'whatsapp=EXCLUDED.whatsapp, instagram_url=EXCLUDED.instagram_url, tiktok_url=EXCLUDED.tiktok_url, maps_url=EXCLUDED.maps_url',
+)
+_tt_s = _tt_s.replace(
+    'whatsapp=EXCLUDED.whatsapp,instagram_url=EXCLUDED.instagram_url,maps_url=EXCLUDED.maps_url',
+    'whatsapp=EXCLUDED.whatsapp,instagram_url=EXCLUDED.instagram_url,tiktok_url=EXCLUDED.tiktok_url,maps_url=EXCLUDED.maps_url',
+)
+
+_tt_main.write_text(_tt_s, encoding="utf-8")
+
+# Admin + business form field.
+for _tt_form in [
+    _XpTikTokPath("/app/app/templates/admin/connect_edit.html"),
+    _XpTikTokPath("/app/app/templates/business/connect.html"),
+]:
+    if _tt_form.exists():
+        _t = _tt_form.read_text(encoding="utf-8")
+        if 'name="tiktok_url"' not in _t:
+            _t = _t.replace(
+                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\'
+ }}"></label>',
+                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\'
+ }}"></label><label>TikTok<input name="tiktok_url" placeholder="@usuario o enlace" value="{{ profile.tiktok_url if profile and profile.tiktok_url else \'\'
+ }}"></label>'
+            )
+            _t = _t.replace(
+                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\' }}"></label>',
+                '<label>Instagram<input name="instagram_url" placeholder="@usuario" value="{{ profile.instagram_url if profile else \'\' }}"></label>\n      <label>TikTok<input name="tiktok_url" placeholder="@usuario o enlace" value="{{ profile.tiktok_url if profile and profile.tiktok_url else \'\' }}"></label>'
+            )
+        _tt_form.write_text(_t, encoding="utf-8")
+
+# Public TikTok button.
+_tt_public = _XpTikTokPath("/app/app/templates/connect/profile.html")
+if _tt_public.exists():
+    _t = _tt_public.read_text(encoding="utf-8")
+    if 'xp-tiktok' not in _t:
+        _insert_before = '    {% if profile.maps_url %}'
+        _button = r'''    {% if profile.tiktok_url %}
+    <a class="xp-action xp-tiktok" href="/connect/{{ profile.slug }}/go/tiktok">
+      <span class="xp-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path fill="#111" d="M19.4 5.3c.6 3.2 2.5 5.1 5.6 5.7v4.2c-2.2-.1-4.1-.8-5.7-2v8.1c0 5-3.8 8.5-8.4 8.5-4.4 0-7.9-3.4-7.9-7.7 0-4.8 4-8.4 9.2-7.8v4.3c-2.6-.4-4.8 1.1-4.8 3.5 0 1.9 1.5 3.4 3.5 3.4 2.4 0 4-1.7 4-4.5V5.3h4.5z"/><path fill="#25F4EE" d="M14.9 5.3v15.8c0 2.8-1.6 4.5-4 4.5-1.2 0-2.2-.5-2.8-1.3.7.5 1.5.8 2.4.8 2.4 0 4-1.7 4-4.5V5.3h.4z"/><path fill="#FE2C55" d="M19.4 5.3c.6 3.2 2.5 5.1 5.6 5.7v.5c-3.4-.4-5.7-2.4-6.4-6.2h.8z"/></svg></span>
+      <span class="xp-copy"><b>TikTok</b><small>Síguenos en TikTok</small></span><span class="xp-arrow">›</span>
+    </a>
+    {% endif %}
+
+'''
+        _t = _t.replace(_insert_before, _button + _insert_before, 1)
+    if '.xp-tiktok .xp-icon' not in _t:
+        _t = _t.replace(
+            '.xp-instagram .xp-icon{background:#fff5fb}',
+            '.xp-instagram .xp-icon{background:#fff5fb}\n    .xp-tiktok .xp-icon{background:#f4f4f5;color:#111}'
+        )
+    # Update public ordering selector/defaults.
+    _t = _t.replace(
+        "google,whatsapp,instagram,maps,call,website,booking,menu,facebook,wifi,feedback,save",
+        "google,whatsapp,instagram,tiktok,maps,call,website,booking,menu,facebook,wifi,feedback,save"
+    )
+    _t = _t.replace(
+        "google:'.xp-google',whatsapp:'.xp-whatsapp',instagram:'.xp-instagram',maps:'.xp-map',",
+        "google:'.xp-google',whatsapp:'.xp-whatsapp',instagram:'.xp-instagram',tiktok:'.xp-tiktok',maps:'.xp-map',"
+    )
+    _tt_public.write_text(_t, encoding="utf-8")
+
+# Add TikTok to drag-and-drop order editors.
+for _tt_form in [
+    _XpTikTokPath("/app/app/templates/admin/connect_edit.html"),
+    _XpTikTokPath("/app/app/templates/business/connect.html"),
+]:
+    if _tt_form.exists():
+        _t = _tt_form.read_text(encoding="utf-8")
+        _t = _t.replace(
+            "google,whatsapp,instagram,maps,call,website,booking,menu,facebook,wifi,feedback,save",
+            "google,whatsapp,instagram,tiktok,maps,call,website,booking,menu,facebook,wifi,feedback,save"
+        )
+        if 'data-key="tiktok"' not in _t:
+            _t = _t.replace(
+                '<div class="xp-order-item" draggable="true" data-key="instagram"><span>☷</span><b>Instagram</b></div>',
+                '<div class="xp-order-item" draggable="true" data-key="instagram"><span>☷</span><b>Instagram</b></div>\n    <div class="xp-order-item" draggable="true" data-key="tiktok"><span>☷</span><b>TikTok</b></div>'
+            )
+        _tt_form.write_text(_t, encoding="utf-8")
+
+print("Exponenta Connect TikTok installed")
