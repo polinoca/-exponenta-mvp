@@ -352,3 +352,62 @@ if "/* XP CONNECT PROFILE LINK V1 */" not in _css:
 '''
     _cssp.write_text(_css,encoding="utf-8")
 print("Connect existing-profile linker installed")
+
+# XP PRODUCT SEPARATION V1
+from pathlib import Path as _XpSepPath
+
+# Clarify product separation in unified Superadmin client control.
+_tp=_XpSepPath("/app/app/templates/admin/control_business.html")
+_ht=_tp.read_text(encoding="utf-8")
+
+# Add simple product summary card before functions if absent.
+if "EXPONENTA PRODUCT SEPARATION V1" not in _ht:
+    anchor='<section class="xp-feature-control">'
+    block=r'''<!-- EXPONENTA PRODUCT SEPARATION V1 -->
+<section class="xp-product-summary">
+  <span class="eyebrow">PRODUCTOS DEL CLIENTE</span>
+  <h2>Pago único vs. suscripción.</h2>
+  <div class="xp-product-summary-grid">
+    <article>
+      <small>PAGO ÚNICO</small>
+      <strong>Reseñas + Connect</strong>
+      <span>Banner/QR dinámico, reseñas y mini hub. No genera mensualidad.</span>
+      <div class="xp-product-pills">
+        <b class="{{ 'on' if feature_states.get('reviews') else 'off' }}">Reseñas {{ 'ON' if feature_states.get('reviews') else 'OFF' }}</b>
+        <b class="{{ 'on' if feature_states.get('connect') else 'off' }}">Connect {{ 'ON' if feature_states.get('connect') else 'OFF' }}</b>
+      </div>
+    </article>
+    <article>
+      <small>SUSCRIPCIÓN</small>
+      <strong>Wallet / Club</strong>
+      <span>Lealtad, Wallet y funciones recurrentes. Se administra como servicio mensual.</span>
+      <div class="xp-product-pills">
+        <b class="{{ 'on' if feature_states.get('wallet') else 'off' }}">Wallet {{ 'ON' if feature_states.get('wallet') else 'OFF' }}</b>
+        <b class="{{ 'on' if feature_states.get('loyalty') else 'off' }}">Lealtad {{ 'ON' if feature_states.get('loyalty') else 'OFF' }}</b>
+      </div>
+    </article>
+  </div>
+</section>
+'''
+    if anchor in _ht:
+        _ht=_ht.replace(anchor,block+anchor,1)
+
+# Rename section labels so Wallet isn't visually mixed with one-time products.
+_ht=_ht.replace('Enciende sólo lo que este cliente necesita.','Activa únicamente los módulos contratados.')
+_tp.write_text(_ht,encoding="utf-8")
+
+# Simplify business navigation wording.
+_base=_XpSepPath("/app/app/templates/base.html")
+_b=_base.read_text(encoding="utf-8")
+_b=_b.replace('["/negocio/wallet","Wallet","▭"]','["/negocio/wallet","Wallet / Club","▭"]')
+_base.write_text(_b,encoding="utf-8")
+
+_cssp=_XpSepPath("/app/app/static/app.css")
+_css=_cssp.read_text(encoding="utf-8")
+if "/* XP PRODUCT SEPARATION V1 */" not in _css:
+    _css+=r'''
+/* XP PRODUCT SEPARATION V1 */
+.xp-product-summary{background:#fff;border:1px solid #e2d7cd;border-radius:22px;padding:20px;margin-top:14px}.xp-product-summary h2{margin:5px 0 14px}.xp-product-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.xp-product-summary-grid article{border:1px solid #e8ded6;border-radius:16px;padding:16px;display:grid;gap:7px}.xp-product-summary-grid small{font-size:.58rem;letter-spacing:.13em;font-weight:900;color:#8a7c72}.xp-product-summary-grid strong{font-size:1.05rem}.xp-product-summary-grid span{font-size:.76rem;line-height:1.4;color:#746960}.xp-product-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}.xp-product-pills b{font-size:.58rem;padding:6px 8px;border-radius:999px}.xp-product-pills b.on{background:#e8f7ed;color:#14733b}.xp-product-pills b.off{background:#f3efeb;color:#8a7b71}@media(max-width:720px){.xp-product-summary-grid{grid-template-columns:1fr}}
+'''
+    _cssp.write_text(_css,encoding="utf-8")
+print("Product separation applied")
