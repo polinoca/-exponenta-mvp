@@ -1233,3 +1233,215 @@ if _order_css.exists():
         _order_css.write_text(_css, encoding="utf-8")
 
 print("Exponenta Connect action ordering installed")
+
+
+# XP CONNECT PREASSIGNED PHYSICAL CODES 2026-10-06
+from pathlib import Path as _XpCodesPath
+_codes_main = _XpCodesPath("/app/app/main.py")
+_codes_s = _codes_main.read_text(encoding="utf-8")
+
+_codes_anchor = '@app.get("/admin/connect", response_class=HTMLResponse)'
+if "def xp_connect_codes_ensure" not in _codes_s:
+    _codes_routes = r'''
+def xp_connect_codes_ensure(db):
+    db.execute(xp_sql_text("""
+        CREATE TABLE IF NOT EXISTS exponenta_connect_codes (
+            code VARCHAR(16) PRIMARY KEY,
+            assigned_slug VARCHAR(80),
+            active INTEGER NOT NULL DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            assigned_at TIMESTAMP
+        )
+    """))
+    db.execute(xp_sql_text("""
+        INSERT INTO exponenta_connect_codes(code)
+        SELECT 'C' || LPAD(gs::text, 4, '0')
+        FROM generate_series(1,200) AS gs
+        ON CONFLICT (code) DO NOTHING
+    """))
+    db.commit()
+
+@app.get("/c/{code}")
+def exponenta_connect_preassigned_redirect(code: str, request: Request, db: Session = Depends(get_db)):
+    xp_connect_codes_ensure(db)
+    clean = (code or "").strip().upper()
+    row = db.execute(
+        xp_sql_text("SELECT code, assigned_slug, active FROM exponenta_connect_codes WHERE code=:code"),
+        {"code": clean},
+    ).mappings().first()
+    if not row or not row["active"]:
+        raise HTTPException(404)
+    if row.get("assigned_slug"):
+        profile = xp_connect_profile(db, row["assigned_slug"])
+        if profile:
+            return RedirectResponse("/connect/" + row["assigned_slug"], status_code=302)
+    return render(request, "connect/unassigned.html", {"code": clean})
+
+@app.get("/admin/connect/codigos", response_class=HTMLResponse)
+def exponenta_connect_codes_admin(request: Request, db: Session = Depends(get_db)):
+    user = control_superadmin(request, db)
+    xp_connect_codes_ensure(db)
+    codes = db.execute(
+        xp_sql_text("""
+            SELECT c.code, c.assigned_slug, c.active, c.assigned_at,
+                   p.name AS business_name
+            FROM exponenta_connect_codes c
+            LEFT JOIN exponenta_connect_profiles p ON p.slug=c.assigned_slug
+            ORDER BY c.code
+        """)
+    ).mappings().all()
+    profiles = db.execute(
+        xp_sql_text("SELECT slug,name FROM exponenta_connect_profiles WHERE active=1 ORDER BY name")
+    ).mappings().all()
+    return render(request, "admin/connect_codes.html", {
+        "user": user, "codes": codes, "profiles": profiles,
+        "csrf": request.state.session["csrf"]
+    })
+
+@app.post("/admin/connect/codigos/asignar")
+def exponenta_connect_codes_assign(
+    request: Request,
+    code: str = Form(...),
+    slug: str = Form(""),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    control_superadmin(request, db)
+    verify_csrf(request, csrf_token)
+    xp_connect_codes_ensure(db)
+    clean = (code or "").strip().upper()
+    clean_slug = (slug or "").strip()
+    if clean_slug:
+        exists = db.execute(
+            xp_sql_text("SELECT slug FROM exponenta_connect_profiles WHERE slug=:slug"),
+            {"slug": clean_slug},
+        ).first()
+        if not exists:
+            raise HTTPException(422, "Perfil Connect inválido")
+    result = db.execute(
+        xp_sql_text("""
+            UPDATE exponenta_connect_codes
+            SET assigned_slug=:slug,
+                assigned_at=CASE WHEN :slug='' THEN NULL ELSE CURRENT_TIMESTAMP END
+            WHERE code=:code
+        """),
+        {"code": clean, "slug": clean_slug or None},
+    )
+    if result.rowcount == 0:
+        raise HTTPException(404)
+    db.commit()
+    return RedirectResponse("/admin/connect/codigos", status_code=303)
+
+@app.get("/admin/connect/codigos/{code}/qr.png")
+def exponenta_connect_code_qr(code: str, db: Session = Depends(get_db)):
+    import io, qrcode
+    xp_connect_codes_ensure(db)
+    clean = (code or "").strip().upper()
+    row = db.execute(
+        xp_sql_text("SELECT code FROM exponenta_connect_codes WHERE code=:code"),
+        {"code": clean},
+    ).first()
+    if not row:
+        raise HTTPException(404)
+    payload = settings.app_base_url.rstrip("/") + "/c/" + clean
+    img = qrcode.QRCode(version=None, box_size=12, border=4)
+    img.add_data(payload)
+    img.make(fit=True)
+    out = io.BytesIO()
+    img.make_image(fill_color="black", back_color="white").save(out, format="PNG")
+    return Response(
+        out.getvalue(),
+        media_type="image/png",
+        headers={"Content-Disposition": 'inline; filename="' + clean + '.png"', "Cache-Control":"public,max-age=86400"},
+    )
+
+@app.get("/admin/connect/codigos/hoja", response_class=HTMLResponse)
+def exponenta_connect_codes_sheet(
+    request: Request,
+    desde: int = 1,
+    cantidad: int = 24,
+    db: Session = Depends(get_db),
+):
+    user = control_superadmin(request, db)
+    xp_connect_codes_ensure(db)
+    desde = max(1, min(desde, 200))
+    cantidad = max(1, min(cantidad, 48))
+    hasta = min(200, desde + cantidad - 1)
+    codes = db.execute(
+        xp_sql_text("""
+            SELECT code, assigned_slug
+            FROM exponenta_connect_codes
+            WHERE CAST(SUBSTRING(code FROM 2) AS INTEGER) BETWEEN :desde AND :hasta
+            ORDER BY code
+        """),
+        {"desde": desde, "hasta": hasta},
+    ).mappings().all()
+    return render(request, "admin/connect_codes_sheet.html", {
+        "user": user, "codes": codes, "desde": desde, "cantidad": cantidad
+    })
+'''
+    _codes_s = _codes_s.replace(_codes_anchor, _codes_routes + "\n" + _codes_anchor, 1)
+    _codes_main.write_text(_codes_s, encoding="utf-8")
+
+_codes_connect = _XpCodesPath("/app/app/templates/connect")
+_codes_connect.mkdir(parents=True, exist_ok=True)
+(_codes_connect / "unassigned.html").write_text(r'''<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Exponenta Connect</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f7f4f0;color:#171513;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Arial,sans-serif}.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}.card{max-width:430px;width:100%;background:#fff;border:1px solid #e7dfd8;border-radius:26px;padding:28px;text-align:center;box-shadow:0 10px 30px rgba(34,24,17,.06)}.ey{font-size:11px;letter-spacing:.16em;font-weight:900;color:#6b3b22}.code{font-size:13px;color:#8c827b;margin-top:16px}.card h1{font-size:30px;line-height:1.05;margin:10px 0}.card p{color:#756d67;line-height:1.45}</style>
+</head><body><main class="wrap"><section class="card"><span class="ey">EXPONENTA CONNECT</span><h1>Este Connect está listo para activarse.</h1><p>El código ya es válido. En cuanto se asigne al negocio, este mismo QR abrirá su perfil automáticamente.</p><div class="code">{{ code }}</div></section></main></body></html>''', encoding="utf-8")
+
+_codes_admin = _XpCodesPath("/app/app/templates/admin")
+_codes_admin.mkdir(parents=True, exist_ok=True)
+(_codes_admin / "connect_codes.html").write_text(r'''{% extends "base.html" %}
+{% block title %}Códigos físicos · Connect{% endblock %}
+{% block body %}
+<main class="container xp-connect-admin">
+  <div class="xp-connect-admin-head">
+    <div><a href="/admin/connect">← Connect</a><span class="eyebrow">CÓDIGOS PREIMPRESOS</span><h1>Códigos físicos Connect</h1><p>Imprime primero. Asigna el negocio después sin cambiar el QR.</p></div>
+    <a class="btn btn-primary" href="/admin/connect/codigos/hoja?desde=1&cantidad=24" target="_blank">Imprimir hoja</a>
+  </div>
+  <div class="xp-code-grid">
+  {% for c in codes %}
+    <article class="xp-code-card">
+      <div><strong>{{ c.code }}</strong><small>{% if c.assigned_slug %}Asignado a {{ c.business_name or c.assigned_slug }}{% else %}Libre{% endif %}</small></div>
+      <img src="/admin/connect/codigos/{{ c.code }}/qr.png" alt="QR {{ c.code }}">
+      <form method="post" action="/admin/connect/codigos/asignar">
+        <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="code" value="{{ c.code }}">
+        <select name="slug">
+          <option value="">Sin asignar</option>
+          {% for p in profiles %}<option value="{{ p.slug }}" {% if c.assigned_slug==p.slug %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-secondary" type="submit">Guardar</button>
+      </form>
+    </article>
+  {% endfor %}
+  </div>
+</main>
+<style>
+.xp-code-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.xp-code-card{background:#fff;border:1px solid #e5ddd6;border-radius:18px;padding:14px;display:grid;grid-template-columns:1fr 72px;gap:12px;align-items:center}.xp-code-card>div{display:grid}.xp-code-card small{color:#786f68;margin-top:3px}.xp-code-card img{width:72px;height:72px}.xp-code-card form{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:8px}.xp-code-card select{min-height:40px;border:1px solid #d8cec6;border-radius:10px;padding:7px;background:#fff}
+</style>
+{% endblock %}''', encoding="utf-8")
+
+(_codes_admin / "connect_codes_sheet.html").write_text(r'''<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>QR Connect</title>
+<style>
+@page{size:letter;margin:10mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;color:#111}.toolbar{margin-bottom:12px}.sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:6mm}.item{border:1px dashed #bbb;padding:5mm;text-align:center;break-inside:avoid}.item img{width:38mm;height:38mm;display:block;margin:auto}.item b{display:block;font-size:12pt;margin-top:2mm}.item small{font-size:7pt;color:#666}@media print{.toolbar{display:none}}
+</style></head><body>
+<div class="toolbar"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
+<div class="sheet">{% for c in codes %}<div class="item"><img src="/admin/connect/codigos/{{ c.code }}/qr.png"><b>{{ c.code }}</b><small>app.exponenta.mx/c/{{ c.code }}</small></div>{% endfor %}</div>
+</body></html>''', encoding="utf-8")
+
+# Add a simple entry point from the existing Connect admin.
+_admin_connect = _XpCodesPath("/app/app/templates/admin/connect.html")
+if _admin_connect.exists():
+    _ac = _admin_connect.read_text(encoding="utf-8")
+    if '/admin/connect/codigos' not in _ac:
+        _ac = _ac.replace(
+            '<a class="btn btn-primary" href="/admin/connect/nuevo">+ Nuevo Connect</a>',
+            '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-secondary" href="/admin/connect/codigos">Códigos físicos</a><a class="btn btn-primary" href="/admin/connect/nuevo">+ Nuevo Connect</a></div>',
+            1,
+        )
+        _admin_connect.write_text(_ac, encoding="utf-8")
+
+print("Exponenta Connect preassigned physical codes installed")
