@@ -1621,3 +1621,21 @@ if start>=0 and end>start:
     _s=_s[:start]+block+_s[end:]
 _p.write_text(_s,encoding="utf-8")
 print("Business Connect missing form fields fixed")
+
+# XP BUSINESS CONNECT ACTION ORDER FIX V1
+from pathlib import Path as _XpOrderPath
+_p=_XpOrderPath("/app/app/main.py")
+_s=_p.read_text(encoding="utf-8")
+start=_s.find('async def business_connect_save(')
+end=_s.find('\n\n@app.', start)
+if start>=0 and end>start:
+    block=_s[start:end]
+    if 'action_order: str = Form(' not in block:
+        block=block.replace(
+            'feedback_prompt: str = Form("¿Cómo fue tu experiencia hoy?"),',
+            'feedback_prompt: str = Form("¿Cómo fue tu experiencia hoy?"),\n    action_order: str = Form("google,whatsapp,instagram,maps,call,booking,website,menu,facebook,wifi,feedback,contact"),',
+            1
+        )
+    _s=_s[:start]+block+_s[end:]
+_p.write_text(_s,encoding="utf-8")
+print("Business Connect action_order field fixed")
