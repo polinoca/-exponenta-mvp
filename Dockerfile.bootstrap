@@ -116,14 +116,15 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/unified_client_control_v2.py \
     && python /bootstrap/patches/connect_hub_background.py \
     && python /bootstrap/patches/connect_mobile_cards.py \
-    && python /bootstrap/patches/connect_public_copy.py
+    && python /bootstrap/patches/connect_public_copy.py \
+    && python /bootstrap/patches/connect_mobile_downloads.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
     && test -f /app/app/config.py \
     && test -f /app/app/main.py \
     && test -f /app/app/static/exponenta-logo.svg \
-    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r requirements.txt reportlab \
     && python -m compileall -q /app/app \
     && chmod +x /app/scripts/start.sh
 
