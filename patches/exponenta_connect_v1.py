@@ -139,6 +139,13 @@ def exponenta_connect_go(slug: str, kind: str, db: Session = Depends(get_db)):
     target = (profile.get(field) or "").strip()
     if kind == "call" and target:
         target = "tel:" + "".join(ch for ch in target if ch.isdigit() or ch == "+")
+    if kind == "whatsapp" and target:
+        from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+        _wa_parts = urlsplit(target)
+        if _wa_parts.hostname in ("wa.me", "api.whatsapp.com", "web.whatsapp.com"):
+            _wa_params = dict(parse_qsl(_wa_parts.query, keep_blank_values=True))
+            _wa_params["text"] = "Hola, escaneé su código QR y me gustaría recibir más información. ¿Me pueden ayudar?"
+            target = urlunsplit((_wa_parts.scheme, _wa_parts.netloc, _wa_parts.path, urlencode(_wa_params), _wa_parts.fragment))
     if not target:
         raise HTTPException(404, "Acción no configurada")
     db.execute(xp_sql_text("INSERT INTO exponenta_connect_clicks(slug,kind) VALUES (:slug,:kind)"), {"slug": slug, "kind": kind})
