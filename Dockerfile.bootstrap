@@ -117,7 +117,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/connect_hub_background.py \
     && python /bootstrap/patches/connect_mobile_cards.py \
     && python /bootstrap/patches/connect_public_copy.py \
-    && python /bootstrap/patches/connect_mobile_downloads.py
+    && python /bootstrap/patches/connect_mobile_downloads.py \
+    && python /bootstrap/patches/seed_armonia_connect.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
