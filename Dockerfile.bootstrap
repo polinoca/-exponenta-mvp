@@ -128,7 +128,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_auto_image_optimization_v5.py \
     && python /bootstrap/patches/surveys_file_picker_repair_v6.py \
     && python /bootstrap/patches/surveys_business_promo_picker_v7.py \
-    && python /bootstrap/patches/surveys_submission_idempotency_v8.py
+    && python /bootstrap/patches/surveys_submission_idempotency_v8.py \
+    && python /bootstrap/patches/surveys_visitor_cooldown_v9.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
