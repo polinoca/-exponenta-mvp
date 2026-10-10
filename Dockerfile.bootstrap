@@ -122,7 +122,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_multitenant_v1.py \
     && python /bootstrap/patches/surveys_access_guards_v1.py \
     && python /bootstrap/patches/surveys_admin_entry_v1.py \
-    && python /bootstrap/patches/surveys_customization_v2.py
+    && python /bootstrap/patches/surveys_customization_v2.py \
+    && python /bootstrap/patches/surveys_business_promotions_v3.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
