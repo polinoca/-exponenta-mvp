@@ -120,7 +120,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/connect_mobile_downloads.py \
     && python /bootstrap/patches/seed_armonia_connect.py \
     && python /bootstrap/patches/surveys_multitenant_v1.py \
-    && python /bootstrap/patches/surveys_access_guards_v1.py
+    && python /bootstrap/patches/surveys_access_guards_v1.py \
+    && python /bootstrap/patches/surveys_admin_entry_v1.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
