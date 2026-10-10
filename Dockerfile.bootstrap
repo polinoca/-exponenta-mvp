@@ -121,14 +121,15 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/seed_armonia_connect.py \
     && python /bootstrap/patches/surveys_multitenant_v1.py \
     && python /bootstrap/patches/surveys_access_guards_v1.py \
-    && python /bootstrap/patches/surveys_admin_entry_v1.py
+    && python /bootstrap/patches/surveys_admin_entry_v1.py \
+    && python /bootstrap/patches/surveys_customization_v2.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
     && test -f /app/app/config.py \
     && test -f /app/app/main.py \
     && test -f /app/app/static/exponenta-logo.svg \
-    && pip install --no-cache-dir -r requirements.txt reportlab \
+    && pip install --no-cache-dir -r requirements.txt reportlab pillow \
     && python -m compileall -q /app/app \
     && chmod +x /app/scripts/start.sh
 
