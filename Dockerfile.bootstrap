@@ -130,7 +130,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_business_promo_picker_v7.py \
     && python /bootstrap/patches/surveys_submission_idempotency_v8.py \
     && python /bootstrap/patches/surveys_visitor_cooldown_v9.py \
-    && python /bootstrap/patches/surveys_superadmin_brand_v11.py
+    && python /bootstrap/patches/surveys_superadmin_brand_v11.py \
+    && python /bootstrap/patches/surveys_mexico_timezone_v12.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
