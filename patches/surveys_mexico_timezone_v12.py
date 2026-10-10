@@ -18,8 +18,8 @@ if marker not in s:
     t=s[a:b]
     t=t.replace("to_char(created_at,'YYYY-MM')", "to_char("+local+",'YYYY-MM')")
     t=t.replace("SELECT attendant,comment,overall,created_at FROM xp_survey_responses", "SELECT attendant,comment,overall,to_char("+local+",'DD/MM/YYYY HH24:MI') AS created_at FROM xp_survey_responses")
-    t=t.replace("body='<h1>Análisis · '", "body='<p class=\\"muted\\">Fechas y horas en Guadalajara / Ciudad de México (UTC−6)</p><h1>Análisis · '")
     s=s[:a]+t+s[b:]
     s=marker+"\n"+s
     p.write_text(s,encoding="utf-8")
 print("Survey reports, analytics filters and CSV display Mexico local time")
+
