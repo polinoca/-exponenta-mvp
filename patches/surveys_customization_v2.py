@@ -191,5 +191,6 @@ def xp_survey_analytics(slug:str,request:Request,attendant:str='',month:str='',d
     frag=frag.replace("body='<h1>'+xp_html.escape(p['name'])+'</h1>", "body='<h1>'+xp_html.escape(p['name'])+'</h1><p><a class=\"btn secondary\" href=\"/admin/encuestas/'+slug+'/personalizar\">Personalizar</a><a class=\"btn secondary\" href=\"/admin/encuestas/'+slug+'/analisis\">Análisis y gráficas</a></p>'")
     s=s[:a]+frag+s[b:]
     s=s.replace("+'</p>'<h1>'+xp_html.escape", "+'</p><h1>'+xp_html.escape")
+    s=s.replace("+'</p>'<p><a", "+'</p><p><a")
     p.write_text(s,encoding='utf-8')
     print("Advanced surveys branding, editable ratings, promotion media and analytics installed")
