@@ -192,5 +192,6 @@ def xp_survey_analytics(slug:str,request:Request,attendant:str='',month:str='',d
     s=s[:a]+frag+s[b:]
     s=s.replace("+'</p>'<h1>'+xp_html.escape", "+'</p><h1>'+xp_html.escape")
     s=s.replace("+'</p>'<p><a", "+'</p><p><a")
+    s=s.replace("</p>'<p>", "</p><p>")
     p.write_text(s,encoding='utf-8')
     print("Advanced surveys branding, editable ratings, promotion media and analytics installed")
