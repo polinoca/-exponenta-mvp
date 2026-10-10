@@ -37,8 +37,8 @@ def xp_survey_init(db):
     db.execute(xp_survey_sql("CREATE INDEX IF NOT EXISTS xp_surveys_responses_slug ON xp_survey_responses(slug, created_at)"))
     db.execute(xp_survey_sql("""
       INSERT INTO xp_surveys (slug,name,brand_color) VALUES
-      ('pet-clinick','Pet Clinick','#0D9D9E')
-      ON CONFLICT (slug) DO NOTHING
+      ('pet-clinick','PET Clinik','#0D9D9E')
+      ON CONFLICT (slug) DO UPDATE SET name='PET Clinik' WHERE xp_surveys.name IN ('Pet Clinick','Pet Clinic','Pet Clinik')
     """))
     db.commit()
 
