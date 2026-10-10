@@ -15,7 +15,7 @@ if marker not in s:
         image=xp_survey_Image.open(xp_survey_io.BytesIO(filedata))
         if image.format not in ('PNG','JPEG','WEBP'):
             raise HTTPException(422,'Usa PNG, JPG o WebP')
-        image=xp_survey_ImageOps.exif_transpose(image)
+        image=ImageOps.exif_transpose(image)
         image.thumbnail((1400,1400),xp_survey_Image.Resampling.LANCZOS)
         transparent=is_logo and ('A' in image.getbands() or 'transparency' in image.info)
         if transparent:
