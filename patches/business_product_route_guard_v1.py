@@ -19,7 +19,8 @@ if marker not in s:
 '''
     m=matches[0]
     indent=m.group(1)
-    guard="\n".join(indent+line if line else "" for line in guard.strip().splitlines())+"\n"
+    import textwrap
+    guard="\n".join(indent+line if line else "" for line in textwrap.dedent(guard).strip().splitlines())+"\n"
     sec=sec[:m.start()]+guard+sec[m.start():]
     s=s[:start]+sec+s[end:]
     p.write_text(s+"\n"+marker+"\n",encoding="utf-8")
