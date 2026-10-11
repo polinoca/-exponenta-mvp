@@ -141,7 +141,9 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_social_share_v20.py \
     && python /bootstrap/patches/surveys_excel_export_v21.py \
     && python /bootstrap/patches/surveys_business_access_v22.py \
-    && python /bootstrap/patches/surveys_admin_management_link_v23.py
+    && python /bootstrap/patches/surveys_admin_management_link_v23.py \
+    && python /bootstrap/patches/product_access_portal_v1.py \
+    && python /bootstrap/patches/survey_logout_v1.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
