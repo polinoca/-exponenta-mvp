@@ -133,7 +133,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_superadmin_brand_v11.py \
     && python /bootstrap/patches/surveys_mexico_timezone_v12.py \
     && python /bootstrap/patches/surveys_tenant_mobile_v13.py \
-    && python /bootstrap/patches/surveys_direct_mobile_flow_v14.py
+    && python /bootstrap/patches/surveys_direct_mobile_flow_v14.py \
+    && python /bootstrap/patches/surveys_thanks_brand_finish_v15.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
