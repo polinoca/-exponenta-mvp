@@ -24,7 +24,7 @@ def xp_admin_business_unit(unit:str,request:Request,db:Session=Depends(get_db)):
     cards=[]
     for org in orgs:
         states=feature_states(db,org.id)
-        if not states.get(unit,False):continue
+        if org.id==3 or not states.get(unit,False):continue
         cards.append('<a class="item" href="/admin/control/'+str(org.id)+'"><strong>'+esc(org.name)+'</strong><span>Administrar cliente →</span></a>')
     body=''.join(cards) or '<p>No hay clientes con este servicio activado.</p>'
     return HTMLResponse('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+' · Exponenta</title><style>body{background:#f7f4ef;color:#2a211b;font:16px system-ui;padding:24px;margin:0}main{max-width:900px;margin:35px auto}h1{font-size:40px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.item{background:#fff;border:1px solid #e5dcd2;border-radius:16px;padding:20px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:12px}.item span,a.back{color:#80563c}.actions{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0}a{font-weight:600}</style><main><img src="/static/exponenta-logo.svg" alt="Exponenta" style="width:140px"><h1>'+title+'</h1><p>Clientes con este servicio activo. Selecciona uno para configurar accesos y funciones.</p><div class="actions"><a class="back" href="/accesos">← Unidades de negocio</a><a class="back" href="/admin/control">Administrar todos los clientes / agregar nuevo</a></div><div class="grid">'+body+'</div></main></html>')
