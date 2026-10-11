@@ -3,6 +3,7 @@ p=Path("/app/app/main.py");s=p.read_text(encoding="utf-8")
 marker="# XP SURVEY CHECK CONFETTI V17"
 if marker not in s:
  a=s.index("def xp_survey_thanks(");b=s.index("\n@app.",a);t=s[a:b]
+ t=t.replace("Menciona el beneficio al personal. Aplican condiciones.","Menciona el beneficio al personal.<br>Aplican condiciones.")
  t=t.replace('body+=\'<section class="xp-thanks-card"><div class="xp-thanks-check" aria-hidden="true">✓</div>\'','body+=\'<section class="xp-thanks-card"><div class="xp-confetti-wrap"><button class="xp-thanks-check" type="button" aria-label="Celebrar respuesta registrada">✓</button><span class="xp-confetti-burst" aria-hidden="true"></span></div>\'')
  target="    body+='</section>'"
  inject="""    body+='''<style>
