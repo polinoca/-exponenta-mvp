@@ -11,7 +11,7 @@ if marker not in s:
     :root{--pet-primary:__MAIN__;--pet-accent:__ACCENT__;--pet-text:#17324D;--pet-muted:#5F7690;--pet-bg:#F4FAFD}
     body{background:var(--pet-bg);color:var(--pet-text);font-family:Inter,system-ui,-apple-system,sans-serif}
     header{display:none}main{max-width:560px;padding:26px 14px 60px;margin:auto}
-    .xp-thanks-logo{display:block;max-width:178px;max-height:94px;object-fit:contain;margin:0 auto 25px}
+    .xp-thanks-logo{display:block;width:100%;height:100%;object-fit:contain}.xp-thanks-logo-badge{display:flex;align-items:center;justify-content:center;width:132px;height:132px;border-radius:50%;background:#fff;border:1px solid #dcecf5;box-shadow:0 8px 24px rgba(29,94,148,.10);padding:19px;margin:0 auto 25px;overflow:hidden}
     .xp-thanks-card{background:#fff;border:1px solid #CFE6F3;box-shadow:0 16px 44px rgba(27,89,142,.08);border-radius:25px;padding:30px 25px;text-align:center}
     .xp-thanks-check{width:72px;height:72px;margin:0 auto 20px;background:var(--pet-primary);color:#fff;font-size:39px;display:grid;place-items:center;border-radius:50%;box-shadow:0 8px 20px rgba(28,91,162,.16)}
     .xp-thanks-card h1{color:var(--pet-primary);font-weight:750;font-size:clamp(27px,7vw,36px);letter-spacing:-.04em;margin:0 0 11px}
@@ -28,7 +28,7 @@ if marker not in s:
     </style>""".replace("__MAIN__",brand).replace("__ACCENT__",accent)
     body=style
     if p["logo_data"]:
-        body+='<img class="xp-thanks-logo" alt="Logotipo de '+xp_html.escape(p["name"],quote=True)+'" src="'+xp_html.escape(p["logo_data"],quote=True)+'">'
+        body+='<div class="xp-thanks-logo-badge"><img class="xp-thanks-logo" alt="Logotipo de '+xp_html.escape(p["name"],quote=True)+'" src="'+xp_html.escape(p["logo_data"],quote=True)+'"></div>'
     else:
         body+='<div style="color:'+brand+';font-size:25px;font-weight:800;text-align:center;margin:0 0 23px">'+xp_html.escape(p["name"])+'</div>'
     body+='<section class="xp-thanks-card"><div class="xp-thanks-check" aria-hidden="true">✓</div>'
