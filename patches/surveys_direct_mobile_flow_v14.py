@@ -10,7 +10,7 @@ if marker not in s:
     replacement=r'''    primary="#2D71B1"
     secondary="#4BB8DE"
     def star_scale(name, unused=None):
-        labels={1:"Muy mala",2:"Mala",3:"Regular",4:"Buena",5:"Excelente"}
+        labels={1:"Nada bueno",2:"No muy bueno",3:"Bueno",4:"Excelente",5:"Excepcional"}
         result='<div class="xp-star-group" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">'
         for n in range(5,0,-1):
             result+='<label class="xp-star-option"><input type="radio" name="'+xp_html.escape(name,quote=True)+'" value="'+str(n)+'" required aria-label="'+str(n)+' estrellas: '+labels[n]+'"><span aria-hidden="true">★</span></label>'
@@ -27,7 +27,7 @@ if marker not in s:
     for q in questions:
         content+='<label>'+xp_html.escape(q["prompt"])+'</label>'+star_scale('q_'+str(q["id"]),['1','2','3','4','5'])
     content+='<input type="hidden" name="submission_token" value="'+xp_survey_uuid.uuid4().hex+'">'
-    content+='<script>document.querySelectorAll(".xp-star-group").forEach(function(group){var caption=group.nextElementSibling;group.addEventListener("change",function(e){if(e.target.matches("input[type=radio]")){var words=["","Muy mala","Mala","Regular","Buena","Excelente"];var n=Number(e.target.value);caption.textContent=n+" de 5 · "+words[n];}});});</script>'
+    content+='<script>document.querySelectorAll(".xp-star-group").forEach(function(group){var caption=group.nextElementSibling;group.addEventListener("change",function(e){if(e.target.matches("input[type=radio]")){var words=["","Nada bueno","No muy bueno","Bueno","Excelente","Excepcional"];var n=Number(e.target.value);caption.textContent=n+" de 5 · "+words[n];}});});</script>'
     content+='<button class="btn" type="submit" style="margin-top:22px">Enviar mi opinión →</button></form></div><p class="muted" style="font-size:12px;text-align:center">Encuesta interna · Powered by Exponenta</p>'
 '''
     part=part[:start]+replacement+part[end:]
