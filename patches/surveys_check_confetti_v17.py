@@ -7,7 +7,7 @@ if marker not in s:
  target="    body+='</section>'"
  inject="""    body+='''<style>
     .xp-confetti-wrap{position:relative;width:180px;height:105px;margin:0 auto 12px;display:grid;place-items:center}
-    .xp-confetti-wrap .xp-thanks-check{position:relative;z-index:2;margin:0;border:0;cursor:pointer;touch-action:manipulation}
+    .xp-confetti-wrap .xp-thanks-check{background:#4BB8DE!important;color:#fff!important;position:relative;z-index:2;margin:0;border:0;cursor:pointer;touch-action:manipulation}
     .xp-confetti-wrap .xp-thanks-check:focus-visible{outline:3px solid var(--pet-accent);outline-offset:5px}
     .xp-confetti-burst{position:absolute;inset:0;pointer-events:none}
     .xp-confetti-piece{position:absolute;left:50%;top:50%;width:7px;height:11px;border-radius:2px;background:var(--pet-accent);opacity:0}
