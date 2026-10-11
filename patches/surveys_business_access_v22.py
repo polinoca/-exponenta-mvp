@@ -5,8 +5,14 @@ marker="# SURVEYS BUSINESS ACCESS V22"
 if marker not in s:
  anchor='@app.get("/negocio/encuestas",response_class=HTMLResponse)'
  block='''@app.get("/encuestas/acceso")
-def xp_survey_simple_access():
-    return RedirectResponse("/login",status_code=303)
+def xp_survey_simple_access(request:Request,db:Session=Depends(get_db)):
+    try:
+        user,org=business_admin_context(request,db)
+        rows=db.execute(xp_survey_sql("SELECT slug FROM xp_surveys WHERE organization_id=:org ORDER BY slug"),{"org":org.id}).mappings().all()
+        if len(rows)==1:return RedirectResponse("/negocio/encuestas/"+rows[0]["slug"],status_code=303)
+        if rows:return RedirectResponse("/negocio/encuestas",status_code=303)
+    except Exception:pass
+    return RedirectResponse("/login?next=%2Fencuestas%2Facceso",status_code=303)
 
 '''
  assert anchor in s
