@@ -16,8 +16,6 @@ if marker not in s:
     if path=="/panel" or (path.startswith("/negocio") and not path.startswith("/negocio/encuestas")):
         if org.id == 3:
             raise HTTPException(403,"Servicio no contratado para esta organización.")
-        key="connect" if path.startswith("/negocio/connect") else "wallet"
-        require_org_feature(db,org,key)
 '''
     m=matches[0]
     indent=m.group(1)
