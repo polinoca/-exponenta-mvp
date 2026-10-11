@@ -29,6 +29,13 @@ WHERE table_schema='public' AND (column_name ILIKE '%logo%' OR column_name ILIKE
 ORDER BY table_name,column_name;
 SQL
 echo "RESTORE_AUDIT_OK"
+psql -h /tmp -p 55432 -U postgres -d restorecheck -At -v ON_ERROR_STOP=1 <<'SQL'
+SELECT 'PET_SURVEY|'||slug||'|org_id='||coalesce(organization_id::text,'NULL') FROM xp_surveys WHERE slug='pet-clinick';
+SELECT 'PET_ORG_MATCHES|'||count(*) FROM organizations WHERE lower(name) LIKE '%pet%clin%';
+SELECT 'PET_USER_MATCHES|'||count(*) FROM users WHERE lower(email)='hv.petclinik@gmail.com';
+SELECT 'ORG_COLUMNS|'||string_agg(column_name,',') FROM information_schema.columns WHERE table_name='organizations';
+SELECT 'USER_COLUMNS|'||string_agg(column_name,',') FROM information_schema.columns WHERE table_name='users';
+SQL
 echo "OBJECT_COPY_START"
 key="verified/$(basename "$backup")"
 aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "$backup" "s3://$BACKUP_S3_BUCKET/$key" --no-progress --only-show-errors
