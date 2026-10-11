@@ -7,7 +7,12 @@ if marker not in s:
     b=s.index("\n@app.",a)
     replacement=r'''def xp_survey_business_results(slug:str,request:Request,db:Session=Depends(get_db)):
     xp_survey_extended(db)
-    _,_,p=xp_survey_business(request,db,slug)
+    try:
+        _,_,p=xp_survey_business(request,db,slug)
+    except HTTPException:
+        xp_survey_admin(request,db)
+        p=xp_survey_lookup(db,slug)
+        if not p:raise HTTPException(404)
     selected=str(request.query_params.get("period","30"))
     days=int(selected) if selected in ("7","30","90") else 0
     condition=(" AND created_at >= CURRENT_TIMESTAMP - INTERVAL '"+str(days)+" days'") if days else ""
