@@ -16,6 +16,19 @@ pg_restore --exit-on-error --no-owner --no-acl -h /tmp -p 55432 -U postgres -d r
 tables=$(psql -h /tmp -p 55432 -U postgres -d restorecheck -Atc "select count(*) from information_schema.tables where table_schema='public' and table_type='BASE TABLE'")
 test "$tables" -gt 0
 echo "RESTORE_TEST_OK tables=$tables file=$(basename "$backup")"
+echo "RESTORE_AUDIT_START"
+psql -h /tmp -p 55432 -U postgres -d restorecheck -At -v ON_ERROR_STOP=1 <<'SQL'
+SELECT 'AUDIT_TABLE|'||table_name||'|'||
+       (xpath('/row/c/text()',query_to_xml(format('SELECT COUNT(*) AS c FROM %I.%I','public',table_name),false,true,'')))[1]::text
+FROM information_schema.tables
+WHERE table_schema='public' AND table_type='BASE TABLE'
+ORDER BY table_name;
+SELECT 'AUDIT_IMAGE_COLUMN|'||table_name||'|'||column_name||'|'||data_type
+FROM information_schema.columns
+WHERE table_schema='public' AND (column_name ILIKE '%logo%' OR column_name ILIKE '%image%' OR column_name ILIKE '%photo%' OR column_name ILIKE '%blob%')
+ORDER BY table_name,column_name;
+SQL
+echo "RESTORE_AUDIT_OK"
 su-exec postgres pg_ctl -D /tmp/exponenta-restore-data -m fast -w stop >/dev/null
 trap - EXIT
 sleep infinity
