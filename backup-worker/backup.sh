@@ -33,6 +33,8 @@ psql -h /tmp -p 55432 -U postgres -d restorecheck -At -v ON_ERROR_STOP=1 <<'SQL'
 SELECT 'PET_SURVEY|'||slug||'|org_id='||coalesce(organization_id::text,'NULL') FROM xp_surveys WHERE slug='pet-clinick';
 SELECT 'PET_ORG_MATCHES|'||count(*) FROM organizations WHERE lower(name) LIKE '%pet%clin%';
 SELECT 'PET_USER_MATCHES|'||count(*) FROM users WHERE lower(email)='hv.petclinik@gmail.com';
+SELECT 'PET_ACCOUNT|'||'org='||coalesce(organization_id::text,'NULL')||'|role='||role||'|active='||active||'|password_set='||(password_hash IS NOT NULL AND length(password_hash)>0) FROM users WHERE lower(email)='hv.petclinik@gmail.com';
+SELECT 'PET_ORG|'||id||'|status='||status FROM organizations WHERE lower(name) LIKE '%pet%clin%';
 SELECT 'ORG_COLUMNS|'||string_agg(column_name,',') FROM information_schema.columns WHERE table_name='organizations';
 SELECT 'USER_COLUMNS|'||string_agg(column_name,',') FROM information_schema.columns WHERE table_name='users';
 SQL
