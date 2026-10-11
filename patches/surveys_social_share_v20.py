@@ -60,7 +60,7 @@ def xp_survey_share_photo(slug:str,db:Session=Depends(get_db)):
     out=xp_survey_io.BytesIO();im.save(out,format="JPEG",quality=86,optimize=True)
     return Response(out.getvalue(),media_type="image/jpeg",headers={"Cache-Control":"public, max-age=3600"})
 '''
-    anchor='def xp_survey_public('
+    anchor='@app.get("/encuesta/{slug}",response_class=HTMLResponse)'
     assert anchor in s
     s=s.replace(anchor,helper+"\n"+anchor,1)
     a=s.index("def xp_survey_public(");b=s.index("\n@app.",a);sec=s[a:b]
