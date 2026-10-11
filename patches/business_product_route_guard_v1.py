@@ -14,6 +14,8 @@ if marker not in s:
     guard='''    # Enforce product access on the server, not just in the navigation.
     path=request.url.path.rstrip("/")
     if path=="/panel" or (path.startswith("/negocio") and not path.startswith("/negocio/encuestas")):
+        if org.id == 3:
+            raise HTTPException(403,"Servicio no contratado para esta organización.")
         key="connect" if path.startswith("/negocio/connect") else "wallet"
         require_org_feature(db,org,key)
 '''
