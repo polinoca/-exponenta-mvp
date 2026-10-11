@@ -27,7 +27,7 @@ if marker not in s:
     for q in questions:
         content+='<label>'+xp_html.escape(q["prompt"])+'</label>'+star_scale('q_'+str(q["id"]),['1','2','3','4','5'])
     content+='<input type="hidden" name="submission_token" value="'+xp_survey_uuid.uuid4().hex+'">'
-    content+='''<script>document.querySelectorAll(".xp-star-group").forEach(function(group){var caption=group.nextElementSibling;group.addEventListener("change",function(e){if(e.target.matches("input[type=radio]")){var words=["","Muy mala","Mala","Regular","Buena","Excelente"];var n=Number(e.target.value);caption.textContent=n+" de 5 · "+words[n];}});});</script>'''
+    content+='<script>document.querySelectorAll(".xp-star-group").forEach(function(group){var caption=group.nextElementSibling;group.addEventListener("change",function(e){if(e.target.matches("input[type=radio]")){var words=["","Muy mala","Mala","Regular","Buena","Excelente"];var n=Number(e.target.value);caption.textContent=n+" de 5 · "+words[n];}});});</script>'
     content+='<button class="btn" type="submit" style="margin-top:22px">Enviar mi opinión →</button></form></div><p class="muted" style="font-size:12px;text-align:center">Encuesta interna · Powered by Exponenta</p>'
 '''
     part=part[:start]+replacement+part[end:]
