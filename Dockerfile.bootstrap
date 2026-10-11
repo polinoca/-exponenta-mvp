@@ -138,7 +138,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_thanks_copy_center_v16.py \
     && python /bootstrap/patches/surveys_check_confetti_v17.py \
     && python /bootstrap/patches/surveys_business_dashboard_v19.py \
-    && python /bootstrap/patches/surveys_social_share_v20.py
+    && python /bootstrap/patches/surveys_social_share_v20.py \
+    && python /bootstrap/patches/surveys_excel_export_v21.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
