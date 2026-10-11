@@ -29,6 +29,14 @@ WHERE table_schema='public' AND (column_name ILIKE '%logo%' OR column_name ILIKE
 ORDER BY table_name,column_name;
 SQL
 echo "RESTORE_AUDIT_OK"
+echo "OBJECT_COPY_START"
+key="verified/$(basename "$backup")"
+aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "$backup" "s3://$BACKUP_S3_BUCKET/$key" --no-progress --only-show-errors
+remote_bytes=$(aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3api head-object --bucket "$BACKUP_S3_BUCKET" --key "$key" --query ContentLength --output text)
+local_bytes=$(wc -c < "$backup" | tr -d ' ')
+test "$remote_bytes" = "$local_bytes"
+aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "$backup.sha256" "s3://$BACKUP_S3_BUCKET/$key.sha256" --no-progress --only-show-errors
+echo "OBJECT_COPY_OK bytes=$remote_bytes key=$key"
 su-exec postgres pg_ctl -D /tmp/exponenta-restore-data -m fast -w stop >/dev/null
 trap - EXIT
 sleep infinity
