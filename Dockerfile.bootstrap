@@ -144,7 +144,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_admin_management_link_v23.py \
     && python /bootstrap/patches/product_access_portal_v1.py \
     && python /bootstrap/patches/survey_logout_v1.py \
-    && python /bootstrap/patches/survey_login_return_v24.py
+    && python /bootstrap/patches/survey_login_return_v24.py \
+    && python /bootstrap/patches/survey_access_loop_fix_v25.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
