@@ -97,15 +97,16 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
     c.setFillColor(color)
     txt("ESCANEA EL QR",h*.162,w*.75,min(11,w*.037),True)
     # Branded official service favicons, fetched as images with resilient fallback.
+    # Only active services, priority order, maximum five icons.
+    # Location is intentionally excluded to keep printed materials uncluttered.
     services=[
         ("Google",row.get("google_url"),"google.com","G","#4285F4"),
         ("WhatsApp",row.get("whatsapp"),"whatsapp.com","W","#25D366"),
         ("Instagram",row.get("instagram_url"),"instagram.com","I","#C13584"),
         ("Facebook",row.get("facebook_url"),"facebook.com","f","#1877F2"),
-        ("TikTok",row.get("tiktok_url"),"tiktok.com","T","#111111"),
-        ("Ubicacion",row.get("maps_url"),"maps.google.com","M","#D64937")
+        ("TikTok",row.get("tiktok_url"),"tiktok.com","T","#111111")
     ]
-    enabled=[item for item in services if item[1]]
+    enabled=[item for item in services if item[1]][:5]
     if enabled:
         import urllib.request
         from PIL import Image
