@@ -21,16 +21,16 @@ for root in [Path("/app/app/templates/admin"), Path("/app/app/templates/business
             continue
         orig = s
         for field in ("name", "subtitle"):
-            pattern = r'<input\\b(?=[^>]*\\bname="' + field + r'")[^>]*>'
+            pattern = r'<input\b(?=[^>]*\bname="' + field + r'")[^>]*>'
             def swap(m):
                 tag = m.group(0)
                 if 'type="hidden"' in tag:
                     return tag
-                value = re.search(r'\\bvalue="([^"]*)"', tag)
+                value = re.search(r'\bvalue="([^"]*)"', tag)
                 if not value:
                     return tag
-                attrs = re.sub(r'\\s*value="[^"]*"', '', tag[6:-1])
-                attrs = re.sub(r'\\s*type="text"', '', attrs)
+                attrs = re.sub(r'\s*value="[^"]*"', '', tag[6:-1])
+                attrs = re.sub(r'\s*type="text"', '', attrs)
                 return '<textarea' + attrs + ' rows="2" style="width:100%;min-height:68px;resize:vertical;font:inherit;line-height:1.4;padding:12px" >' + value.group(1) + '</textarea>'
             s = re.sub(pattern, swap, s)
         if s != orig:
