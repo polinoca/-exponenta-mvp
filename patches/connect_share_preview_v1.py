@@ -36,15 +36,29 @@ def xp_connect_share_image(slug: str, db: Session = Depends(get_db)):
     if not re.fullmatch(r"#[0-9A-Fa-f]{6}",brand): brand="#A88448"
 
 
-    draw.ellipse((322,22,878,578),fill="white",outline=brand,width=7)
+    # Composite a truly circular logo thumbnail, then draw the ring last.
+    # This prevents opaque white corners in uploaded logos from hiding the ring.
+    from PIL import ImageChops
+    center_x,center_y=600,300
+    radius=270
     logo=str(profile.get("logo_data") or "")
     if ";base64," in logo and logo.startswith("data:image/"):
         try:
             raw=base64.b64decode(logo.split(";base64,",1)[1])
             source=Image.open(io.BytesIO(raw)).convert("RGBA")
-            source.thumbnail((490,490),Image.Resampling.LANCZOS)
-            img.paste(source,(600-source.width//2,300-source.height//2),source)
+            # Fit the full artwork with a 24px breathing margin.
+            max_side=2*(radius-24)
+            source.thumbnail((max_side,max_side),Image.Resampling.LANCZOS)
+            layer=Image.new("RGBA",(2*radius,2*radius),(255,255,255,0))
+            layer.alpha_composite(source,((2*radius-source.width)//2,(2*radius-source.height)//2))
+            mask=Image.new("L",layer.size,0)
+            ImageDraw.Draw(mask).ellipse((10,10,2*radius-11,2*radius-11),fill=255)
+            layer.putalpha(ImageChops.multiply(layer.getchannel("A"),mask))
+            img.paste(layer,(center_x-radius,center_y-radius),layer)
         except Exception: pass
+    # Ring on top, not behind the image: fully visible even for opaque logos.
+    draw=ImageDraw.Draw(img)
+    draw.ellipse((center_x-radius,center_y-radius,center_x+radius,center_y+radius),outline=brand,width=8)
     buf=io.BytesIO()
     img.save(buf,format="JPEG",quality=91,optimize=True)
     return Response(content=buf.getvalue(),media_type="image/jpeg",headers={"Cache-Control":"public, max-age=300"})
