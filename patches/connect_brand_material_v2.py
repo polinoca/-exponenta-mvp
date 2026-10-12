@@ -48,10 +48,10 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
         c.arc(w*.82,-h*.08,w*1.15,h*.21,90,110)
     # Circular logo centered, brand-colored outline, image fully contained.
     logo_y=h*.835
-    radius=min(w*.105,h*.08)
+    radius=min(w*.145,h*.105)
     c.setStrokeColor(color);c.setLineWidth(1.7)
     c.circle(w/2,logo_y,radius,fill=0,stroke=1)
-    c.setLineWidth(.5);c.circle(w/2,logo_y,radius+4,fill=0,stroke=1)
+
     logo=row.get("logo_data") or ""
     if logo.startswith("data:image/") and ";base64," in logo:
         try:
@@ -60,35 +60,35 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             im=Image.open(io.BytesIO(raw)).convert("RGBA")
             im.thumbnail((600,600))
             imbuf=io.BytesIO();im.save(imbuf,format="PNG");imbuf.seek(0)
-            side=radius*1.52
+            side=radius*1.85
             c.drawImage(ImageReader(imbuf),w/2-side/2,logo_y-side/2,side,side,mask="auto",preserveAspectRatio=True,anchor="c")
         except Exception: pass
     c.setFillColorRGB(.12,.12,.12)
     name_lines=str(row["name"]).splitlines()
     if len(name_lines)==1 and " Salón de " in name_lines[0]:
         name_lines=name_lines[0].replace(" Salón de ","\nSalón de ",1).splitlines()
-    name_y=h*.705
+    name_y=h*.692
     for ix,line in enumerate(name_lines[:3]):
-        txt(line,name_y-ix*h*.037,w*.86,min(19,w*.056) if ix==0 else min(15,w*.047),ix==0)
+        txt(line,name_y-ix*h*.037,w*.86,min(15,w*.047) if ix==0 else min(12,w*.040),ix==0)
     sub_y=name_y-len(name_lines[:3])*h*.037-h*.01
     c.setFillColor(color)
     lines(row.get("subtitle"),sub_y,2,min(9.5,w*.028),h*.025)
     c.setFillColorRGB(.09,.09,.09)
-    txt("Conectate con nosotros",h*.53,w*.90,min(23,w*.075),True)
+    txt("Conéctate con nosotros",h*.55,w*.90,min(21,w*.069),True)
     c.setFillColor(color)
-    txt("Todo lo que necesitas, en un solo lugar.",h*.493,w*.88,min(10,w*.031))
+    txt("Todo lo que necesitas, en un solo lugar.",h*.508,w*.88,min(10,w*.031))
     # QR is generated from actual permanent Connect URL, never an illustrative image.
     payload=str(request.base_url).rstrip("/")+"/connect/"+slug
     qr=qrcode.QRCode(box_size=12,border=4,error_correction=qrcode.constants.ERROR_CORRECT_H)
     qr.add_data(payload);qr.make(fit=True)
     img=io.BytesIO();qr.make_image(fill_color="black",back_color="white").save(img,format="PNG");img.seek(0)
-    qrsize=min(w*.57,h*.315)
-    qx=(w-qrsize)/2;qy=h*.145
+    qrsize=min(w*.53,h*.265)
+    qx=(w-qrsize)/2;qy=h*.215
     c.setStrokeColor(color);c.setLineWidth(2.2)
-    c.roundRect(qx-6,qy-6,qrsize+12,qrsize+12,8,fill=0,stroke=1)
+    c.roundRect(qx-5,qy-5,qrsize+10,qrsize+10,7,fill=0,stroke=1)
     c.drawImage(ImageReader(img),qx,qy,qrsize,qrsize)
     c.setFillColor(color)
-    txt("ESCANEA EL QR",qy-h*.043,w*.75,min(14,w*.045),True)
+    txt("ESCANEA EL QR",h*.162,w*.75,min(11,w*.037),True)
     # Branded official service favicons, fetched as images with resilient fallback.
     services=[
         ("Google",row.get("google_url"),"google.com","G","#4285F4"),
@@ -103,11 +103,11 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
         import urllib.request
         from PIL import Image
         n=len(enabled)
-        diameter=min(w*.105,w*.83/max(n,1))
+        diameter=min(w*.09,w*.82/max(n,1))
         gap=min(w*.16,(w*.88-diameter*n)/max(n-1,1)) if n>1 else 0
         width=n*diameter+(n-1)*gap
         left=(w-width)/2
-        icon_y=h*.084
+        icon_y=h*.079
         for idx,(label,url,domain,letter,hexcolor) in enumerate(enabled):
             x=left+idx*(diameter+gap)
             c.setFillColorRGB(1,1,1)
@@ -160,17 +160,17 @@ s=s[:a]+'''  <div class="xp-material-toolbar no-print">
 a=s.index('    <div class="xp-material-banner"')
 b=s.index('    <aside class="no-print">',a)
 s=s[:a]+'''    <div class="xp-material-banner xp-material-new" style="--xp-brand:{{ profile.brand_color or '#6b3b22' }}">
-      <header style="display:flex;flex-direction:column;gap:10px;margin:18px 0 0">
+      <header style="display:flex;flex-direction:column;gap:10px;margin:8px 0 0">
         <div class="xp-material-roundlogo">{% if profile.logo_data %}<img src="{{ profile.logo_data }}" alt="{{ profile.name }}">{% else %}{{ profile.name[:1] }}{% endif %}</div>
-        <strong style="white-space:pre-line;line-height:1.15;font-size:1.2rem">{{ profile.name }}</strong>
+        <strong style="white-space:pre-line;line-height:1.15;font-size:1rem">{{ profile.name }}</strong>
         {% if profile.subtitle %}<small style="white-space:pre-line;color:var(--xp-brand)">{{ profile.subtitle }}</small>{% endif %}
       </header>
-      <div class="xp-material-copy" style="margin:22px 0 12px">
+      <div class="xp-material-copy" style="margin:12px 0 10px">
         <h1>Conéctate con nosotros</h1>
         <p>Todo lo que necesitas, en un solo lugar.</p>
       </div>
-      <div id="connect-qr" class="xp-material-qr" style="border:3px solid var(--xp-brand);padding:10px"></div>
-      <p style="font-weight:800;color:var(--xp-brand);margin:12px 0">ESCANEA EL QR</p>
+      <div id="connect-qr" class="xp-material-qr" style="border:0;padding:4px"></div>
+      <p style="font-weight:800;color:var(--xp-brand);margin:6px 0">ESCANEA EL QR</p>
       <div class="xp-material-services" style="font-size:.72rem;line-height:1.6">
         {% if profile.google_url %}<span>Reseñas · </span>{% endif %}
         {% if profile.whatsapp %}<span>WhatsApp · </span>{% endif %}
@@ -184,7 +184,7 @@ s=s[:a]+'''    <div class="xp-material-banner xp-material-new" style="--xp-brand
 '''+s[b:]
 s=s.replace('</main>','''<style>
 .xp-material-new:before{display:none}
-.xp-material-new .xp-material-roundlogo{width:80px;height:80px;border:2px solid var(--xp-brand);outline:3px solid color-mix(in srgb,var(--xp-brand) 18%,transparent);outline-offset:3px;border-radius:50%;display:grid;place-items:center;background:white;padding:10px}
+.xp-material-new .xp-material-roundlogo{width:112px;height:112px;border:2px solid var(--xp-brand);outline:none;border-radius:50%;display:grid;place-items:center;background:white;padding:10px}
 .xp-material-new .xp-material-roundlogo img{width:100%;height:100%;object-fit:contain}
 .xp-material-new.decorated:after{content:"";position:absolute;pointer-events:none;inset:15px;border:1px solid color-mix(in srgb,var(--xp-brand) 22%,transparent);border-radius:18px}
 </style>
