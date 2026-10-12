@@ -11,6 +11,23 @@ if "/* xp-multiline-header-v1 */" not in s:
     </style>""", 1)
     public.write_text(s, encoding="utf-8")
 
+# Premium circular logo, using each business brand color automatically.
+s = public.read_text(encoding="utf-8")
+if "/* xp-premium-circle-logo-v1 */" not in s:
+    s = s.replace("</style>", """/* xp-premium-circle-logo-v1 */
+    .xp-head .xp-logo{
+      width:82px;height:82px;border-radius:50%;overflow:hidden;
+      background:#fff;flex:0 0 82px;padding:8px;
+      border:1.5px solid var(--brand);
+      outline:3px solid color-mix(in srgb,var(--brand) 16%,transparent);
+      outline-offset:3px;
+      box-shadow:0 6px 18px rgba(0,0,0,.09);
+    }
+    .xp-head .xp-logo img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+    @media(max-width:420px){.xp-head .xp-logo{width:72px;height:72px;flex-basis:72px;padding:7px}}
+    </style>""", 1)
+    public.write_text(s, encoding="utf-8")
+
 # Textareas allow Enter for title and subtitle in both admin and business editors.
 for root in [Path("/app/app/templates/admin"), Path("/app/app/templates/business"), Path("/app/app/templates/negocio")]:
     if not root.exists():
