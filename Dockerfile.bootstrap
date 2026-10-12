@@ -156,7 +156,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_staff_filter_v1.py \
     && python /bootstrap/patches/surveys_staff_case_back_v1.py \
     && python /bootstrap/patches/connect_multiline_header_v1.py \
-    && python /bootstrap/patches/connect_brand_material_v2.py
+    && python /bootstrap/patches/connect_brand_material_v2.py \
+    && python /bootstrap/patches/connect_share_preview_v1.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
