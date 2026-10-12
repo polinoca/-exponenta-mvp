@@ -21,7 +21,7 @@ needle='    body=style+\'<section class="xp-db-head">'
 assert needle in sec
 replacement='''    # Account label is derived from authenticated organization; never from query parameters.
     try:
-        account_user,account_org=xp_survey_business(request,db,slug)
+        account_user,account_org,_=xp_survey_business(request,db,slug)
         account_label=esc(getattr(account_user,"email","") or "Administrador")
         business_label=esc(getattr(account_org,"name","") or p["name"])
     except HTTPException:
