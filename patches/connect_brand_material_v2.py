@@ -33,8 +33,7 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
     def txt(text,y,maxwidth,fontsize,bold=False):
         font="Helvetica-Bold" if bold else "Helvetica"
         # Avoid emoji boxes in Helvetica, keep supported Spanish characters.
-        text="".join(ch for ch in str(text) if ch in "\\n\\t" or (ch.isprintable() and ch.encode("cp1252",errors="ignore")))
-        text=re.sub(r"[\\u2600-\\u27bf\\ufe00-\\ufe0f\\u200d]", "", text).strip()
+        text="".join(ch for ch in str(text) if ch.isprintable() and ch.encode("cp1252",errors="ignore") and ord(ch) not in (0x25a0,0x25a1)).strip()
         while fontsize>7 and c.stringWidth(text,font,fontsize)>maxwidth: fontsize-=.5
         c.setFont(font,fontsize)
         c.drawCentredString(w/2,y,text)
