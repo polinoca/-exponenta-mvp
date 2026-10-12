@@ -42,7 +42,11 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             y-=leading
         return y
     c.setFillColorRGB(1,1,1);c.rect(0,0,w,h,fill=1,stroke=0)
-    # Clean white background; no corner ornaments.
+    # Optional single inset brand-color frame, clear of content.
+    if decor:
+        inset=w*.027
+        c.setStrokeColor(color);c.setLineWidth(max(.65,w*.0022))
+        c.roundRect(inset,inset,w-2*inset,h-2*inset,min(w*.035,11),fill=0,stroke=1)
     # Circular logo centered, brand-colored outline, image fully contained.
     logo_y=h*.835
     radius=min(w*.145,h*.105)
@@ -189,7 +193,7 @@ b=s.index('  <section class="xp-material-sheet">',a)
 s=s[:a]+'''  <div class="xp-material-toolbar no-print">
     <a href="/admin/connect">← Connect</a>
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:6px"><input id="xp-decor" type="checkbox" checked onchange="xpMaterialDecor()"> Detalles de fondo</label>
+      <label class="xp-frame-switch" for="xp-decor"><span class="xp-frame-label"><strong>Marco de marca</strong><small>Mostrar en el PDF</small></span><input id="xp-decor" type="checkbox" checked onchange="xpMaterialDecor()"><span class="xp-frame-track" aria-hidden="true"></span></label>
       <button class="btn btn-secondary" type="button" onclick="downloadQR()">Descargar QR PNG</button>
       <button class="btn btn-primary" type="button" onclick="xpMaterialPDF('a6')">PDF A6</button>
       <button class="btn btn-primary" type="button" onclick="xpMaterialPDF('carta')">PDF carta</button>
@@ -225,7 +229,18 @@ s=s.replace('</main>','''<style>
 .xp-material-new:before{display:none}
 .xp-material-new .xp-material-roundlogo{width:112px;height:112px;border:2px solid var(--xp-brand);outline:none;border-radius:50%;display:grid;place-items:center;background:white;padding:10px}
 .xp-material-new .xp-material-roundlogo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
-.xp-material-new.decorated:after{content:"";position:absolute;pointer-events:none;inset:15px;border:1px solid color-mix(in srgb,var(--xp-brand) 22%,transparent);border-radius:18px}
+.xp-material-new{position:relative}
+.xp-material-new.decorated:after{content:"";position:absolute;pointer-events:none;inset:2.7%;border:1.2px solid var(--xp-brand);border-radius:12px}
+.xp-frame-switch{display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;cursor:pointer;min-height:48px}
+.xp-frame-label{display:flex;flex-direction:column;gap:2px;color:#202124;line-height:1.2}
+.xp-frame-label strong{font-size:13px;font-weight:650}
+.xp-frame-label small{font-size:11px;color:#737981}
+.xp-frame-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.xp-frame-track{width:38px;height:22px;border-radius:99px;background:#d2d6db;position:relative;flex:none;transition:background .2s}
+.xp-frame-track:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;box-shadow:0 1px 3px #0002;transition:transform .2s}
+.xp-frame-switch input:checked+.xp-frame-track{background:#1f2937}
+.xp-frame-switch input:checked+.xp-frame-track:after{transform:translateX(16px)}
+.xp-frame-switch:focus-within{outline:2px solid #64748b;outline-offset:2px}
 </style>
 </main>''',1)
 s=s.replace('function saveMaterialPDF(){','''function xpMaterialDecor(){
