@@ -32,7 +32,7 @@ s=s[:a]+'''def xp_survey_data_image(filedata,filename,maximum=12*1024*1024):
         raise HTTPException(422,'No se pudo procesar la imagen')
 '''+s[b:]
 a=s.index('def xp_business_survey_promotion(')
-b=s.index('\\n@app.',a)
+b=s.index('\n@app.',a)
 part=s[a:b]
 part=part.replace("    body+='<label>Imagen del producto o promoción</label>", """    if p['promotion_image']:
         body+='<label><input type="checkbox" name="remove_promotion_image" value="1"> Eliminar imagen actual al guardar</label>'
@@ -40,7 +40,7 @@ part=part.replace("    body+='<label>Imagen del producto o promoción</label>", 
     body+='<label>Imagen del producto o promoción</label>""",1)
 s=s[:a]+part+s[b:]
 a=s.index('async def xp_business_survey_promotion_update(')
-b=s.index('\\n@app.',a)
+b=s.index('\n@app.',a)
 part=s[a:b]
 part=part.replace("    file=form.get('promotion_file')", """    if str(form.get('remove_promotion_image') or '')=='1':
         updates['image']=None
@@ -48,7 +48,7 @@ part=part.replace("    file=form.get('promotion_file')", """    if str(form.get(
 part=part.replace("    if file is not None and getattr(file,'filename',None):","    if file is not None and getattr(file,'filename',None) and str(form.get('remove_promotion_image') or '')!='1':",1)
 s=s[:a]+part+s[b:]
 a=s.index('def xp_survey_customize(')
-b=s.index('\\n@app.',a)
+b=s.index('\n@app.',a)
 part=s[a:b]
 part=part.replace("    if p['logo_data']:body+=", """    if p['logo_data']:
         body+='<label><input type="checkbox" name="remove_logo" value="1"> Eliminar logotipo actual al guardar</label>'
@@ -57,7 +57,7 @@ part=part.replace("    if p['logo_data']:body+=", """    if p['logo_data']:
     if p['logo_data']:body+=""",1)
 s=s[:a]+part+s[b:]
 a=s.index("updates={'slug':slug,'color':")
-b=s.index('\\n@app.',a)
+b=s.index('\n@app.',a)
 part=s[a:b]
 part=part.replace("    for key in ['color','secondary']:", """    if str(form.get('remove_logo') or '')=='1':
         updates['logo']=None
@@ -66,4 +66,4 @@ part=part.replace("    for key in ['color','secondary']:", """    if str(form.ge
     for key in ['color','secondary']:""",1)
 part=part.replace("        if obj is not None and getattr(obj,'filename',None):","        if obj is not None and getattr(obj,'filename',None) and not (str(form.get('remove_logo') or '')=='1' if dest=='logo' else str(form.get('remove_promotion_image') or '')=='1'):",1)
 s=s[:a]+part+s[b:]
-p.write_text(s+'\\n# XP IMAGE RESIZE V1\\n')
+p.write_text(s+'\n# XP IMAGE RESIZE V1\n')
