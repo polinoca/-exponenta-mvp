@@ -32,7 +32,9 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
     color=HexColor(brand)
     def txt(text,y,maxwidth,fontsize,bold=False):
         font="Helvetica-Bold" if bold else "Helvetica"
-        text=str(text).strip()
+        # Avoid emoji boxes in Helvetica, keep supported Spanish characters.
+        text="".join(ch for ch in str(text) if ch in "\\n\\t" or (ch.isprintable() and ch.encode("cp1252",errors="ignore")))
+        text=re.sub(r"[\\u2600-\\u27bf\\ufe00-\\ufe0f\\u200d]", "", text).strip()
         while fontsize>7 and c.stringWidth(text,font,fontsize)>maxwidth: fontsize-=.5
         c.setFont(font,fontsize)
         c.drawCentredString(w/2,y,text)
@@ -58,35 +60,14 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             from PIL import Image
             raw=base64.b64decode(logo.split(";base64,",1)[1])
             im=Image.open(io.BytesIO(raw)).convert("RGBA")
-            # Remove empty margins from uploaded logo and preserve proportions.
-            from PIL import ImageChops
-            if im.mode != "RGBA": im=im.convert("RGBA")
-            alpha=im.getchannel("A")
-            if alpha.getextrema()[0] == 255:
-                rgb=im.convert("RGB")
-                bg=Image.new("RGB",im.size,(255,255,255))
-                diff=ImageChops.difference(rgb,bg).convert("L").point(lambda v: 255 if v>32 else 0)
-                bbox=diff.getbbox()
-            else:
-                bbox=alpha.point(lambda v:255 if v>16 else 0).getbbox()
-            if bbox:
-                im=im.crop(bbox)
-            im.thumbnail((900,900),Image.Resampling.LANCZOS)
-            available=radius*1.86
+            # Keep original uploaded logo unaltered: no crop or circular clipping.
+            im.thumbnail((1200,1200),Image.Resampling.LANCZOS)
+            available=radius*1.72
             iw,ih=im.size
             scale=min(available/max(iw,1),available/max(ih,1))
             dw,dh=iw*scale,ih*scale
             imbuf=io.BytesIO();im.save(imbuf,format="PNG");imbuf.seek(0)
-            # True circular alpha mask prevents rectangular white image edges.
-            from PIL import ImageDraw
-            artwork=Image.new("RGBA",(800,800),(255,255,255,0))
-            fitted=im.resize((max(1,int(dw/available*744)),max(1,int(dh/available*744))),Image.Resampling.LANCZOS)
-            artwork.alpha_composite(fitted,((800-fitted.width)//2,(800-fitted.height)//2))
-            clip=Image.new("L",(800,800),0)
-            ImageDraw.Draw(clip).ellipse((0,0,799,799),fill=255)
-            artwork.putalpha(ImageChops.multiply(artwork.getchannel("A"),clip))
-            imbuf=io.BytesIO();artwork.save(imbuf,format="PNG");imbuf.seek(0)
-            c.drawImage(ImageReader(imbuf),w/2-radius*.93,logo_y-radius*.93,radius*1.86,radius*1.86,mask="auto")
+            c.drawImage(ImageReader(imbuf),w/2-dw/2,logo_y-dh/2,dw,dh,mask="auto")
         except Exception: pass
     c.setStrokeColor(color);c.setLineWidth(1.7)
     c.circle(w/2,logo_y,radius,fill=0,stroke=1)
@@ -111,8 +92,8 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
     img=io.BytesIO();qr.make_image(fill_color="black",back_color="white").save(img,format="PNG");img.seek(0)
     qrsize=min(w*.53,h*.265)
     qx=(w-qrsize)/2;qy=h*.215
-    c.setStrokeColor(color);c.setLineWidth(2.2)
-    c.roundRect(qx-5,qy-5,qrsize+10,qrsize+10,7,fill=0,stroke=1)
+    c.setStrokeColor(color);c.setLineWidth(1.35)
+    c.roundRect(qx-1.5,qy-1.5,qrsize+3,qrsize+3,5,fill=0,stroke=1)
     c.drawImage(ImageReader(img),qx,qy,qrsize,qrsize)
     c.setFillColor(color)
     txt("ESCANEA EL QR",h*.162,w*.75,min(11,w*.037),True)
@@ -142,7 +123,7 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             c.circle(x+diameter/2,icon_y+diameter/2,diameter/2,stroke=1,fill=1)
             drawn=False
             try:
-                favicon=("https://cdn.simpleicons.org/whatsapp/25D366" if label=="WhatsApp" else "https://www.google.com/s2/favicons?domain="+domain+"&sz=128")
+                favicon="https://www.google.com/s2/favicons?domain="+domain+"&sz=128"
                 req=urllib.request.Request(favicon,headers={"User-Agent":"Mozilla/5.0"})
                 with urllib.request.urlopen(req,timeout=1.5) as resp: raw=resp.read(120000)
                 if label=="WhatsApp" and raw.lstrip().startswith(b"<"):
@@ -161,14 +142,16 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
                     drawn=True
             except Exception: pass
             if not drawn and label=="WhatsApp":
-                cx=x+diameter/2;cy=icon_y+diameter/2
-                c.setFillColor(HexColor("#25D366"));c.circle(cx,cy,diameter*.38,fill=1,stroke=0)
-                c.setStrokeColorRGB(1,1,1);c.setLineWidth(max(1,diameter*.07))
-                c.circle(cx,cy,diameter*.24,fill=0,stroke=1)
-                c.line(cx-diameter*.14,cy-diameter*.16,cx-diameter*.22,cy-diameter*.27)
-                c.line(cx-diameter*.10,cy+diameter*.10,cx+diameter*.12,cy-diameter*.12)
-                drawn=True
-            if not drawn:
+                # Retry official WhatsApp artwork, never draw an imitation.
+                try:
+                    req=urllib.request.Request("https://cdn.simpleicons.org/whatsapp/25D366",headers={"User-Agent":"Mozilla/5.0"})
+                    with urllib.request.urlopen(req,timeout=2) as resp: raw=resp.read(120000)
+                    import cairosvg
+                    icon=cairosvg.svg2png(bytestring=raw,output_width=256,output_height=256)
+                    c.drawImage(ImageReader(io.BytesIO(icon)),x+diameter*.16,icon_y+diameter*.16,diameter*.68,diameter*.68,mask="auto")
+                    drawn=True
+                except Exception: pass
+            if not drawn and label!="WhatsApp":
                 c.setFillColor(HexColor(hexcolor))
                 c.setFont("Helvetica-Bold",diameter*.47)
                 c.drawCentredString(x+diameter/2,icon_y+diameter*.31,letter)
@@ -178,7 +161,7 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             c.setFont("Helvetica",font_size)
             c.drawCentredString(x+diameter/2,icon_y-diameter*.25,label)
     c.setFillColorRGB(.64,.64,.64)
-    txt("Powered by Exponenta",h*.018,w*.75,min(6.5,w*.019))
+    txt("Powered by Exponenta",h*.043,w*.75,min(5.8,w*.017))
     c.showPage();c.save()
     filename=f"{slug}-{size}-{'decorado' if decor else 'blanco'}.pdf"
     return Response(content=buf.getvalue(),media_type="application/pdf",headers={"Content-Disposition":f'attachment; filename="{filename}"',"Cache-Control":"no-store"})
