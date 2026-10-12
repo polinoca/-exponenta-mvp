@@ -3,19 +3,19 @@ p=Path("/app/app/main.py")
 s=p.read_text(encoding="utf-8")
 marker="# XP CONNECT BANK TRANSFER QR V1"
 if marker not in s:
-    code=r'''
+    code=r"""
 # XP CONNECT BANK TRANSFER QR V1
 import re as xp_pay_re
 from fastapi.responses import Response as xp_pay_Response
 
 def xp_pay_setup(db):
-    db.execute(xp_sql_text("""
+    db.execute(xp_sql_text('''
     CREATE TABLE IF NOT EXISTS exponenta_connect_bank_accounts (
       id BIGSERIAL PRIMARY KEY, slug VARCHAR(80) NOT NULL,
       bank TEXT NOT NULL, beneficiary TEXT NOT NULL,
       account TEXT DEFAULT '', clabe TEXT DEFAULT '',
       sort_order INTEGER DEFAULT 0, active INTEGER DEFAULT 1
-    )"""))
+    )'''))
     db.commit()
 
 def xp_pay_profile(db, slug):
@@ -106,7 +106,7 @@ def xp_pay_qr(slug: str,request: Request,db: Session=Depends(get_db)):
     out=io.BytesIO();qr.make_image(fill_color="black",back_color="white").save(out,format="PNG",dpi=(300,300))
     return Response(out.getvalue(),media_type="image/png",headers={"Content-Disposition":f'attachment; filename="{slug}-pagos-QR.png"',"Cache-Control":"no-store"})
 
-'''
+"""
     anchor='@app.get("/admin/connect/{slug}/material", response_class=HTMLResponse)'
     if anchor not in s:raise SystemExit("Connect material route not found")
     s=s.replace(anchor,code+anchor,1)
