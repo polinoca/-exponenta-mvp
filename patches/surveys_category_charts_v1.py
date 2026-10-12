@@ -39,7 +39,7 @@ new='''    body+='<section class="xp-db-panel xp-categories"><h2>Distribución d
 part=part[:start]+new+part[end:]
 needle='    body=style+welcome+'
 assert needle in part
-part=part.replace(needle,'''    style=style.replace('</style>','<style>.xp-category-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:18px}.xp-category-tabs button{min-height:44px;border:1px solid #CBDFEC;border-radius:11px;background:white;color:#2D71B1;font-weight:750;font-size:12px;padding:8px 3px}.xp-category-tabs button.active{background:#2D71B1;color:white}.xp-categories [hidden]{display:none!important}.xp-compare-row{display:grid;grid-template-columns:75px 1fr 55px;align-items:center;gap:9px;margin:16px 0;font-size:13px}.xp-compare-row strong{color:#2D71B1;text-align:right}@media(max-width:390px){.xp-category-tabs{grid-template-columns:repeat(2,1fr)}}</style></style>')
+part=part.replace(needle,'''    style=style.replace('</style>','.xp-category-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:18px}.xp-category-tabs button{min-height:44px;border:1px solid #CBDFEC;border-radius:11px;background:white;color:#2D71B1;font-weight:750;font-size:12px;padding:8px 3px}.xp-category-tabs button.active{background:#2D71B1;color:white}.xp-categories [hidden]{display:none!important}.xp-compare-row{display:grid;grid-template-columns:75px 1fr 55px;align-items:center;gap:9px;margin:16px 0;font-size:13px}.xp-compare-row strong{color:#2D71B1;text-align:right}@media(max-width:390px){.xp-category-tabs{grid-template-columns:repeat(2,1fr)}}</style>')
 '''+needle,1)
 s=s[:a]+part+s[b:]
 a=s.index('def xp_business_survey_promotion(')
