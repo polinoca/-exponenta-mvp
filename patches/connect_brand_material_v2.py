@@ -42,15 +42,11 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             y-=leading
         return y
     c.setFillColorRGB(1,1,1);c.rect(0,0,w,h,fill=1,stroke=0)
-    if decor:
-        c.setStrokeColor(color);c.setLineWidth(max(1,w*.004))
-        c.arc(-w*.16,h*.78,w*.22,h*1.05,0,110)
-        c.arc(w*.82,-h*.08,w*1.15,h*.21,90,110)
+    # Clean white background; no corner ornaments.
     # Circular logo centered, brand-colored outline, image fully contained.
     logo_y=h*.835
     radius=min(w*.145,h*.105)
-    c.setStrokeColor(color);c.setLineWidth(1.7)
-    c.circle(w/2,logo_y,radius,fill=0,stroke=1)
+    # Circular border is drawn on top of the logo.
 
     logo=row.get("logo_data") or ""
     if logo.startswith("data:image/") and ";base64," in logo:
@@ -77,8 +73,19 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             scale=min(available/max(iw,1),available/max(ih,1))
             dw,dh=iw*scale,ih*scale
             imbuf=io.BytesIO();im.save(imbuf,format="PNG");imbuf.seek(0)
-            c.drawImage(ImageReader(imbuf),w/2-dw/2,logo_y-dh/2,dw,dh,mask="auto")
+            # True circular alpha mask prevents rectangular white image edges.
+            from PIL import ImageDraw
+            artwork=Image.new("RGBA",(800,800),(255,255,255,0))
+            fitted=im.resize((max(1,int(dw/available*744)),max(1,int(dh/available*744))),Image.Resampling.LANCZOS)
+            artwork.alpha_composite(fitted,((800-fitted.width)//2,(800-fitted.height)//2))
+            clip=Image.new("L",(800,800),0)
+            ImageDraw.Draw(clip).ellipse((0,0,799,799),fill=255)
+            artwork.putalpha(ImageChops.multiply(artwork.getchannel("A"),clip))
+            imbuf=io.BytesIO();artwork.save(imbuf,format="PNG");imbuf.seek(0)
+            c.drawImage(ImageReader(imbuf),w/2-radius*.93,logo_y-radius*.93,radius*1.86,radius*1.86,mask="auto")
         except Exception: pass
+    c.setStrokeColor(color);c.setLineWidth(1.7)
+    c.circle(w/2,logo_y,radius,fill=0,stroke=1)
     c.setFillColorRGB(.12,.12,.12)
     name_lines=str(row["name"]).splitlines()
     if len(name_lines)==1 and " Salón de " in name_lines[0]:
@@ -131,16 +138,32 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             c.circle(x+diameter/2,icon_y+diameter/2,diameter/2,stroke=1,fill=1)
             drawn=False
             try:
-                favicon="https://www.google.com/s2/favicons?domain="+domain+"&sz=128"
+                favicon=("https://cdn.simpleicons.org/whatsapp/25D366" if label=="WhatsApp" else "https://www.google.com/s2/favicons?domain="+domain+"&sz=128")
                 req=urllib.request.Request(favicon,headers={"User-Agent":"Mozilla/5.0"})
                 with urllib.request.urlopen(req,timeout=1.5) as resp: raw=resp.read(120000)
+                if label=="WhatsApp" and raw.lstrip().startswith(b"<"):
+                    import cairosvg
+                    raw=cairosvg.svg2png(bytestring=raw,output_width=128,output_height=128)
                 im=Image.open(io.BytesIO(raw)).convert("RGBA")
                 if im.width>=24 and im.height>=24:
+                    from PIL import ImageDraw, ImageChops
+                    im=im.resize((256,256),Image.Resampling.LANCZOS)
+                    clip=Image.new("L",(256,256),0)
+                    ImageDraw.Draw(clip).ellipse((0,0,255,255),fill=255)
+                    im.putalpha(ImageChops.multiply(im.getchannel("A"),clip))
                     b=io.BytesIO();im.save(b,format="PNG");b.seek(0)
                     pad=diameter*.16
                     c.drawImage(ImageReader(b),x+pad,icon_y+pad,diameter-2*pad,diameter-2*pad,mask="auto")
                     drawn=True
             except Exception: pass
+            if not drawn and label=="WhatsApp":
+                cx=x+diameter/2;cy=icon_y+diameter/2
+                c.setFillColor(HexColor("#25D366"));c.circle(cx,cy,diameter*.38,fill=1,stroke=0)
+                c.setStrokeColorRGB(1,1,1);c.setLineWidth(max(1,diameter*.07))
+                c.circle(cx,cy,diameter*.24,fill=0,stroke=1)
+                c.line(cx-diameter*.14,cy-diameter*.16,cx-diameter*.22,cy-diameter*.27)
+                c.line(cx-diameter*.10,cy+diameter*.10,cx+diameter*.12,cy-diameter*.12)
+                drawn=True
             if not drawn:
                 c.setFillColor(HexColor(hexcolor))
                 c.setFont("Helvetica-Bold",diameter*.47)
