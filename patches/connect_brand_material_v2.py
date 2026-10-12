@@ -58,10 +58,26 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
             from PIL import Image
             raw=base64.b64decode(logo.split(";base64,",1)[1])
             im=Image.open(io.BytesIO(raw)).convert("RGBA")
-            im.thumbnail((600,600))
+            # Remove empty margins from uploaded logo and preserve proportions.
+            from PIL import ImageChops
+            if im.mode != "RGBA": im=im.convert("RGBA")
+            alpha=im.getchannel("A")
+            if alpha.getextrema()[0] == 255:
+                rgb=im.convert("RGB")
+                bg=Image.new("RGB",im.size,(255,255,255))
+                diff=ImageChops.difference(rgb,bg).convert("L").point(lambda v: 255 if v>32 else 0)
+                bbox=diff.getbbox()
+            else:
+                bbox=alpha.point(lambda v:255 if v>16 else 0).getbbox()
+            if bbox:
+                im=im.crop(bbox)
+            im.thumbnail((900,900),Image.Resampling.LANCZOS)
+            available=radius*1.86
+            iw,ih=im.size
+            scale=min(available/max(iw,1),available/max(ih,1))
+            dw,dh=iw*scale,ih*scale
             imbuf=io.BytesIO();im.save(imbuf,format="PNG");imbuf.seek(0)
-            side=radius*1.85
-            c.drawImage(ImageReader(imbuf),w/2-side/2,logo_y-side/2,side,side,mask="auto",preserveAspectRatio=True,anchor="c")
+            c.drawImage(ImageReader(imbuf),w/2-dw/2,logo_y-dh/2,dw,dh,mask="auto")
         except Exception: pass
     c.setFillColorRGB(.12,.12,.12)
     name_lines=str(row["name"]).splitlines()
@@ -185,7 +201,7 @@ s=s[:a]+'''    <div class="xp-material-banner xp-material-new" style="--xp-brand
 s=s.replace('</main>','''<style>
 .xp-material-new:before{display:none}
 .xp-material-new .xp-material-roundlogo{width:112px;height:112px;border:2px solid var(--xp-brand);outline:none;border-radius:50%;display:grid;place-items:center;background:white;padding:10px}
-.xp-material-new .xp-material-roundlogo img{width:100%;height:100%;object-fit:contain}
+.xp-material-new .xp-material-roundlogo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
 .xp-material-new.decorated:after{content:"";position:absolute;pointer-events:none;inset:15px;border:1px solid color-mix(in srgb,var(--xp-brand) 22%,transparent);border-radius:18px}
 </style>
 </main>''',1)
