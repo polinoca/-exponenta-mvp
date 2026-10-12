@@ -66,4 +66,4 @@ part=part.replace("    for key in ['color','secondary']:", """    if str(form.ge
     for key in ['color','secondary']:""",1)
 part=part.replace("        if obj is not None and getattr(obj,'filename',None):","        if obj is not None and getattr(obj,'filename',None) and not (str(form.get('remove_logo') or '')=='1' if dest=='logo' else str(form.get('remove_promotion_image') or '')=='1'):",1)
 s=s[:a]+part+s[b:]
-p.write_text(s+'\\n# XP IMAGE RESIZE V1\\n')
+p.write_text(s+'\n# XP IMAGE RESIZE V1\n')
