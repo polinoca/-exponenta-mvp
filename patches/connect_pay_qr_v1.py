@@ -53,6 +53,17 @@ def xp_pay_admin(slug: str,request: Request,db: Session=Depends(get_db)):
     xp_pay_setup(db)
     profile=db.execute(xp_sql_text("SELECT * FROM exponenta_connect_profiles WHERE slug=:slug"),{"slug":slug}).mappings().first()
     if not profile:raise HTTPException(404)
+    # Seed confirmed SPACC accounts only on the matching business profile, once.
+    normalized=xp_pay_re.sub(r"[^a-z0-9]","",str(profile["name"]).lower())
+    if normalized in ("spacc","spaciocc","espaciocc") or slug in ("spacc","spacio-cc","espacio-cc"):
+        exists=db.execute(xp_sql_text("SELECT 1 FROM exponenta_connect_bank_accounts WHERE slug=:slug LIMIT 1"),{"slug":slug}).first()
+        if not exists:
+            for bank,beneficiary,account,clabe,priority in (
+                ("Mercado Pago W","Cristina Lepe de Los Angeles","","722969010101260640",1),
+                ("BBVA","Carolina Guzman Arroyo","1519061863","012320015190618638",2)
+            ):
+                db.execute(xp_sql_text("INSERT INTO exponenta_connect_bank_accounts(slug,bank,beneficiary,account,clabe,sort_order,active) VALUES (:slug,:bank,:beneficiary,:account,:clabe,:sort_order,1)"),{"slug":slug,"bank":bank,"beneficiary":beneficiary,"account":account,"clabe":clabe,"sort_order":priority})
+            db.commit()
     accounts=db.execute(xp_sql_text("SELECT * FROM exponenta_connect_bank_accounts WHERE slug=:slug ORDER BY sort_order,id"),{"slug":slug}).mappings().all()
     from html import escape
     def h(v):return escape(str(v or ""),quote=True)
