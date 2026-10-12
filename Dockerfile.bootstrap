@@ -150,7 +150,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/business_product_route_guard_v1.py \
     && python /bootstrap/patches/unit_admin_branded_denial_v1.py \
     && python /bootstrap/patches/selector_session_500_hotfix_v1.py \
-    && python /bootstrap/patches/surveys_final_mobile_brand_v1.py
+    && python /bootstrap/patches/surveys_final_mobile_brand_v1.py \
+    && python /bootstrap/patches/surveys_category_charts_v1.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
