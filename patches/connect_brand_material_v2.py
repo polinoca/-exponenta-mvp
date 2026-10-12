@@ -76,7 +76,7 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
     c.setFillColorRGB(.09,.09,.09)
     txt("Conectate con nosotros",h*.53,w*.90,min(23,w*.075),True)
     c.setFillColor(color)
-    txt("TODO EN UN SOLO LUGAR",h*.493,w*.86,min(10,w*.031),True)
+    txt("Todo lo que necesitas, en un solo lugar.",h*.493,w*.88,min(10,w*.031))
     # QR is generated from actual permanent Connect URL, never an illustrative image.
     payload=str(request.base_url).rstrip("/")+"/connect/"+slug
     qr=qrcode.QRCode(box_size=12,border=4,error_correction=qrcode.constants.ERROR_CORRECT_H)
@@ -89,15 +89,53 @@ def xp_connect_material_pdf_v2(slug: str, request: Request, size: str = "a6", de
     c.drawImage(ImageReader(img),qx,qy,qrsize,qrsize)
     c.setFillColor(color)
     txt("ESCANEA EL QR",qy-h*.043,w*.75,min(14,w*.045),True)
-    # Show only enabled services.
-    services=[("Resenas",row.get("google_url")),("WhatsApp",row.get("whatsapp")),("Instagram",row.get("instagram_url")),("Facebook",row.get("facebook_url")),("TikTok",row.get("tiktok_url")),("Ubicacion",row.get("maps_url")),("Web",row.get("website_url"))]
-    enabled=[label for label,url in services if url]
+    # Branded official service favicons, fetched as images with resilient fallback.
+    services=[
+        ("Google",row.get("google_url"),"google.com","G","#4285F4"),
+        ("WhatsApp",row.get("whatsapp"),"whatsapp.com","W","#25D366"),
+        ("Instagram",row.get("instagram_url"),"instagram.com","I","#C13584"),
+        ("Facebook",row.get("facebook_url"),"facebook.com","f","#1877F2"),
+        ("TikTok",row.get("tiktok_url"),"tiktok.com","T","#111111"),
+        ("Ubicacion",row.get("maps_url"),"maps.google.com","M","#D64937")
+    ]
+    enabled=[item for item in services if item[1]]
     if enabled:
-        c.setFillColorRGB(.3,.3,.3)
-        line="  ·  ".join(enabled[:5])
-        txt(line,h*.065,w*.88,min(9,w*.026))
-    c.setFillColorRGB(.45,.45,.45)
-    txt("Powered by Exponenta",h*.027,w*.75,min(8,w*.024))
+        import urllib.request
+        from PIL import Image
+        n=len(enabled)
+        diameter=min(w*.105,w*.83/max(n,1))
+        gap=min(w*.16,(w*.88-diameter*n)/max(n-1,1)) if n>1 else 0
+        width=n*diameter+(n-1)*gap
+        left=(w-width)/2
+        icon_y=h*.084
+        for idx,(label,url,domain,letter,hexcolor) in enumerate(enabled):
+            x=left+idx*(diameter+gap)
+            c.setFillColorRGB(1,1,1)
+            c.setStrokeColor(color);c.setLineWidth(.7)
+            c.circle(x+diameter/2,icon_y+diameter/2,diameter/2,stroke=1,fill=1)
+            drawn=False
+            try:
+                favicon="https://www.google.com/s2/favicons?domain="+domain+"&sz=128"
+                req=urllib.request.Request(favicon,headers={"User-Agent":"Mozilla/5.0"})
+                with urllib.request.urlopen(req,timeout=1.5) as resp: raw=resp.read(120000)
+                im=Image.open(io.BytesIO(raw)).convert("RGBA")
+                if im.width>=24 and im.height>=24:
+                    b=io.BytesIO();im.save(b,format="PNG");b.seek(0)
+                    pad=diameter*.16
+                    c.drawImage(ImageReader(b),x+pad,icon_y+pad,diameter-2*pad,diameter-2*pad,mask="auto")
+                    drawn=True
+            except Exception: pass
+            if not drawn:
+                c.setFillColor(HexColor(hexcolor))
+                c.setFont("Helvetica-Bold",diameter*.47)
+                c.drawCentredString(x+diameter/2,icon_y+diameter*.31,letter)
+            c.setFillColorRGB(.19,.19,.19)
+            font_size=min(7,w*.019)
+            while font_size>4 and c.stringWidth(label,"Helvetica",font_size)>diameter+gap*.6:font_size-=.25
+            c.setFont("Helvetica",font_size)
+            c.drawCentredString(x+diameter/2,icon_y-diameter*.25,label)
+    c.setFillColorRGB(.64,.64,.64)
+    txt("Powered by Exponenta",h*.018,w*.75,min(6.5,w*.019))
     c.showPage();c.save()
     filename=f"{slug}-{size}-{'decorado' if decor else 'blanco'}.pdf"
     return Response(content=buf.getvalue(),media_type="application/pdf",headers={"Content-Disposition":f'attachment; filename="{filename}"',"Cache-Control":"no-store"})
@@ -129,7 +167,7 @@ s=s[:a]+'''    <div class="xp-material-banner xp-material-new" style="--xp-brand
       </header>
       <div class="xp-material-copy" style="margin:22px 0 12px">
         <h1>Conéctate con nosotros</h1>
-        <p>Todo en un solo lugar</p>
+        <p>Todo lo que necesitas, en un solo lugar.</p>
       </div>
       <div id="connect-qr" class="xp-material-qr" style="border:3px solid var(--xp-brand);padding:10px"></div>
       <p style="font-weight:800;color:var(--xp-brand);margin:12px 0">ESCANEA EL QR</p>
