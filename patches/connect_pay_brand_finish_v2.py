@@ -11,9 +11,9 @@ if marker not in s:
     db.execute(xp_sql_text("ALTER TABLE exponenta_connect_bank_accounts ADD COLUMN IF NOT EXISTS bank_logo_data TEXT"))
     db.commit()
     profile=''',1)
-    block=block.replace('        cards+=f\'<section class="card"><h2>{h(a["bank"])}</h2>{fields}</section>\'', '''        bank_logo=a.get("bank_logo_data") or ""
+    block=block.replace('        cards+=f\'<section class="card"><h2>{h(a["bank"])}</h2>{fields}</section>\'', """        bank_logo=a.get("bank_logo_data") or ""
         bank_icon=f'<img class="bank-logo" alt="" src="{h(bank_logo)}">' if str(bank_logo).startswith("data:image/") else '<span class="bank-logo-empty" aria-hidden="true"></span>'
-        cards+=f'<section class="card"><div class="bank-heading">{bank_icon}<h2>{h(a["bank"])}</h2></div>{fields}</section>\\''''.replace("\\'","'"))
+        cards+=f'<section class="card"><div class="bank-heading">{bank_icon}<h2>{h(a["bank"])}</h2></div>{fields}</section>'""")
     block=block.replace('<h1>NAME</h1>','')
     block=block.replace('button{background:#222;color:white;', 'button{background:var(--brand);color:white;')
     block=block.replace('.notice{font-size:12px;', '.bank-heading{display:flex;align-items:center;gap:14px;margin-bottom:12px}.bank-heading h2{margin:0}.bank-logo{width:64px;height:55px;object-fit:contain;flex:none}.bank-logo-empty{display:none}.notice{font-size:12px;')
@@ -27,12 +27,10 @@ if marker not in s:
     block=block.replace('    accounts=db.execute(','''    db.execute(xp_sql_text("ALTER TABLE exponenta_connect_bank_accounts ADD COLUMN IF NOT EXISTS bank_logo_data TEXT"))
     db.commit()
     accounts=db.execute(''',1)
-    needle='    rows+=f\\'\\'\\'<form method="post"'
-    # Attach upload form after existing account forms, not nested.
-    anchor='    rows+=f\\'\\'\\'<form method="post" action="/admin/connect/{h(slug)}/pagos/guardar" class="card"><input type="hidden" name="csrf_token" value="{h(request.state.session["csrf"])}"><h2>Agregar cuenta'
-    insertion='''    for a in accounts:
-        rows+=f\\'''<form method="post" enctype="multipart/form-data" action="/admin/connect/{h(slug)}/pagos/logo" class="card"><strong>Logotipo · {h(a["bank"])}</strong><input type="hidden" name="csrf_token" value="{h(request.state.session["csrf"])}"><input type="hidden" name="account_id" value="{a["id"]}"><input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp" required><button>Guardar logotipo bancario</button></form>\\'''
-'''
+    anchor='    rows+=f'+chr(39)*3+'<form method="post" action="/admin/connect/{h(slug)}/pagos/guardar" class="card"><input type="hidden" name="csrf_token" value="{h(request.state.session["csrf"])}"><h2>Agregar cuenta'
+    insertion="""    for a in accounts:
+        rows+=f'''<form method="post" enctype="multipart/form-data" action="/admin/connect/{h(slug)}/pagos/logo" class="card"><strong>Logotipo · {h(a["bank"])}</strong><input type="hidden" name="csrf_token" value="{h(request.state.session["csrf"])}"><input type="hidden" name="account_id" value="{a["id"]}"><input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp" required><button>Guardar logotipo bancario</button></form>'''
+"""
     if anchor not in block: raise SystemExit("Admin form anchor missing")
     block=block.replace(anchor,insertion+anchor,1)
     s=s[:a]+block+s[b:]
