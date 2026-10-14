@@ -160,7 +160,8 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/connect_share_preview_v1.py \
     && python /bootstrap/patches/connect_a6_png_export_v1.py \
     && python /bootstrap/patches/connect_pay_qr_v1.py \
-    && python /bootstrap/patches/connect_pay_brand_finish_v2.py
+    && python /bootstrap/patches/connect_pay_brand_finish_v2.py \
+    && python /bootstrap/patches/connect_printed_ana_qr_redirect_v1.py
 
 WORKDIR /app
 RUN test -f /app/app/__init__.py \
