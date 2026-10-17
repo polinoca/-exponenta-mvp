@@ -28,7 +28,7 @@ def xp_pet_extra_init(db):
         response_id BIGINT PRIMARY KEY, reception INTEGER NOT NULL,
         recommendation INTEGER NOT NULL,
         CHECK (reception BETWEEN 1 AND 5),
-        CHECK (recommendation BETWEEN 0 AND 10))"""))
+        CHECK (recommendation BETWEEN 1 AND 5))"""))
 '''
 route_marker='@app.get("/encuesta/{slug}"'
 pos=s.index(route_marker)
@@ -51,8 +51,8 @@ part=part.replace("'<label for=\"comment\">5. ¿Quieres compartir algún comenta
 needle='    questions=db.execute('
 assert needle in part
 part=part.replace(needle,'''    if pet:
-        content+='<label>'+xp_html.escape(q['recommend'])+'</label><div class="xp-nps">'+''.join('<label><input type="radio" name="recommendation" value="'+str(i)+'" required><span>'+str(i)+'</span></label>' for i in range(11))+'</div><p class="muted">0 = Nada probable · 10 = Muy probable</p>'
-        content='<style>.xp-nps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.xp-nps label{min-width:0}.xp-nps span{display:flex;align-items:center;justify-content:center;padding:12px 2px;border:1px solid #CBDFEC;border-radius:10px}.xp-nps input:checked+span{background:#2D71B1;color:#fff}@media(min-width:720px){.xp-nps{grid-template-columns:repeat(11,minmax(0,1fr))}}</style>'+content
+        content+='<label>'+xp_html.escape(q['recommend'])+'</label><div class="xp-nps">'+''.join('<label><input type="radio" name="recommendation" value="'+str(i)+'" required><span>'+str(i)+'</span></label>' for i in range(1,6))+'</div><p class="muted">1 = Nada probable · 5 = Muy probable</p>'
+        content='<style>.xp-nps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.xp-nps label{min-width:0}.xp-nps span{display:flex;align-items:center;justify-content:center;padding:12px 2px;border:1px solid #CBDFEC;border-radius:10px}.xp-nps input:checked+span{background:#2D71B1;color:#fff}@media(min-width:720px){.xp-nps{grid-template-columns:repeat(5,minmax(0,1fr))}}</style>'+content
     questions=db.execute(''',1)
 s=s[:a]+part+s[b:]
 a=s.index('async def xp_survey_submit(');b=s.index('\n@app.',a);part=s[a:b]
@@ -69,7 +69,7 @@ part=part.replace(needle,'''    pet_reception=None
         except (ValueError,TypeError):
             db.rollback()
             raise HTTPException(422,'Responde todas las preguntas obligatorias')
-        if not 1<=pet_reception<=5 or not 0<=pet_recommendation<=10:
+        if not 1<=pet_reception<=5 or not 1<=pet_recommendation<=5:
             db.rollback()
             raise HTTPException(422,'Calificación fuera de rango')
 '''+needle,1)
