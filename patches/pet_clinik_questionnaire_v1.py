@@ -48,9 +48,9 @@ part=part.replace("    questions=db.execute(",'''    if pet:
         content+='<label>'+xp_html.escape(q['recommend'])+'</label><div class="xp-nps">'+''.join('<label><input type="radio" name="recommendation" value="'+str(i)+'" required><span>'+str(i)+'</span></label>' for i in range(11))+'</div><p class="muted">0 = Nada probable · 10 = Muy probable</p>'
     questions=db.execute(''',1)
 # Ensure responsive 0-10 scale
-part=part.replace("    return xp_survey_page('Tu opinión',content)",'''    if pet:
+part=part.replace("    response=HTMLResponse(",'''    if pet:
         content='<style>.xp-nps{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.xp-nps label{min-width:0!important}.xp-nps span{padding:9px 2px!important}@media(min-width:720px){.xp-nps{grid-template-columns:repeat(11,minmax(0,1fr))}}</style>'+content
-    return xp_survey_page('Tu opinión',content)''',1)
+    response=HTMLResponse(''',1)
 s=s[:a]+part+s[b:]
 a=s.index('async def xp_survey_submit(');b=s.index('\n@app.',a);part=s[a:b]
 # New fields are required only for Pet Clinik, not other tenants.
