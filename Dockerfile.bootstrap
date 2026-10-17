@@ -164,6 +164,7 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/pet_clinik_cooldown_identity_v2.py \
     && python /bootstrap/patches/pet_clinik_excel_share_clarity_v2.py \
     && python /bootstrap/patches/pet_clinik_client_panel_brand_v1.py \
+    && python /bootstrap/patches/pet_clinik_qr_download_v1.py \
     && python /bootstrap/patches/connect_multiline_header_v1.py \
     && python /bootstrap/patches/connect_brand_material_v2.py \
     && python /bootstrap/patches/connect_share_preview_v1.py \
@@ -177,7 +178,7 @@ RUN test -f /app/app/__init__.py \
     && test -f /app/app/config.py \
     && test -f /app/app/main.py \
     && test -f /app/app/static/exponenta-logo.svg \
-    && pip install --no-cache-dir -r requirements.txt reportlab pillow pymupdf cairosvg \
+    && pip install --no-cache-dir -r requirements.txt reportlab pillow pymupdf cairosvg qrcode[pil] \
     && python -m compileall -q /app/app \
     && chmod +x /app/scripts/start.sh
 
