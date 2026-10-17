@@ -29,12 +29,9 @@ if marker not in s:
     s=s.replace('''<col min="5" max="5" width="25" customWidth="1"/><col min="6" max="6" width="65" customWidth="1"/>''','''<col min="5" max="6" width="17" customWidth="1"/><col min="7" max="7" width="25" customWidth="1"/><col min="8" max="8" width="65" customWidth="1"/>''',1)
     s=s.replace("'<autoFilter ref=\"A1:F'+str(max(1,len(rows)))+'\"/></worksheet>'","'<autoFilter ref=\"A1:H'+str(max(1,len(rows)))+'\"/></worksheet>'",1)
     a=s.index('def xp_survey_business_results('); b=s.index('\n@app.',a); part=s[a:b]
-    style_anchor='''    </style>"""
-    body=style+'''
-    assert style_anchor in part
-    part=part.replace(style_anchor,'''    @media(max-width:540px){.xp-db-actions{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%;gap:8px}.xp-db-actions a,.xp-db-actions button{width:100%;min-height:48px!important;padding:10px 8px!important;font-size:12px!important;white-space:normal}.xp-db-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.xp-db-tabs a{white-space:nowrap;flex:0 0 auto}}
-    </style>"""
-    body=style+''',1)
+    mobile_css='@media(max-width:540px){.xp-db-actions{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%;gap:8px}.xp-db-actions a,.xp-db-actions button{width:100%;min-height:48px!important;padding:10px 8px!important;font-size:12px!important;white-space:normal}.xp-db-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.xp-db-tabs a{white-space:nowrap;flex:0 0 auto}}'
+    assert '    body=style+' in part
+    part=part.replace('    body=style+',"    body=style.replace('</style>',mobile_css+'</style>')+",1)
     anchor="    body+='<nav class=\"xp-db-tabs\""
     assert anchor in part
     share_fix="""    body+=\"\"\"<script>(function(){var btn=document.getElementById('xp-share-excel'),link=document.getElementById('xp-export-excel');if(!btn||!link)return;btn.addEventListener('click',async function(e){e.preventDefault();e.stopImmediatePropagation();var filename='pet-clinik-resultados.xlsx';try{if(navigator.share&&window.isSecureContext&&window.File){var response=await fetch(link.href,{credentials:'same-origin'});if(!response.ok)throw new Error('download');var file=new File([await response.blob()],filename,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});if(!navigator.canShare||navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Resultados PET Clinik'});return;}}}catch(err){if(err&&err.name==='AbortError')return;}link.click();},true);})();</script>\"\"\"
