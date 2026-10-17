@@ -167,6 +167,7 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/pet_clinik_qr_download_v1.py \
     && python /bootstrap/patches/pet_clinik_panel_header_qr_v2.py \
     && python /bootstrap/patches/pet_clinik_logo_circle_v1.py \
+    && python /bootstrap/patches/pet_clinik_promotion_brand_nav_v1.py \
     && python /bootstrap/patches/connect_multiline_header_v1.py \
     && python /bootstrap/patches/connect_brand_material_v2.py \
     && python /bootstrap/patches/connect_share_preview_v1.py \
