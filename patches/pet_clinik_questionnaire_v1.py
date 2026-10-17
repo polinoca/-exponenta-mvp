@@ -33,17 +33,20 @@ pos=s.index('def xp_survey_public(')
 s=s[:pos]+helper+'\n'+s[pos:]
 a=s.index('def xp_survey_public(');b=s.index('\n@app.',a);part=s[a:b]
 # Swap labels for Pet Clinik only, retaining the existing 5-star inputs and staff name field.
-needle="    content+='<label>¿Cómo calificas la atención recibida?</label>'+scale('overall',['1 ★','2 ★','3 ★','4 ★','5 ★'])"
+needle="    content+='<label>1. ¿Cómo calificarías la atención recibida?</label>'+star_scale('overall',['1 ★','2 ★','3 ★','4 ★','5 ★'])"
 assert needle in part
 part=part.replace(needle,'''    pet=(slug=='pet-clinick')
     q=xp_pet_questions(db,slug) if pet else {}
     if pet:
-        content+='<label>'+xp_html.escape(q['reception'])+'</label>'+scale('reception',['1 ★','2 ★','3 ★','4 ★','5 ★'])
-    content+='<label>'+(xp_html.escape(q['overall']) if pet else '¿Cómo calificas la atención recibida?')+'</label>'+scale('overall',['1 ★','2 ★','3 ★','4 ★','5 ★'])''',1)
-part=part.replace("content+='<label>¿Cómo encontraste la limpieza?</label>'","content+='<label>'+(xp_html.escape(q['cleanliness']) if pet else '¿Cómo encontraste la limpieza?')+'</label>'",1)
-part=part.replace("content+='<label>¿Recibiste una explicación clara?</label>'","content+='<label>'+(xp_html.escape(q['clarity']) if pet else '¿Recibiste una explicación clara?')+'</label>'",1)
-part=part.replace("content+='<label>¿Quién te atendió? (opcional)</label>'","content+='<label>'+(xp_html.escape(q['veterinarian']) if pet else '¿Quién te atendió? (opcional)')+'</label>'",1)
-part=part.replace("content+='<label>¿Quieres dejarnos un comentario? (opcional)</label>'","content+='<label>'+xp_html.escape(q['recommend'])+'</label><div class=\"radio-row xp-nps\">'+''.join('<label><input type=\"radio\" name=\"recommendation\" value=\"'+str(i)+'\" required><span>'+str(i)+'</span></label>' for i in range(11))+'</div><p class=\"muted\">0 = Nada probable · 10 = Muy probable</p>' if pet else ''\n    content+='<label>'+(xp_html.escape(q['comment'])+' (opcional)' if pet else '¿Quieres dejarnos un comentario? (opcional)')+'</label>'",1)
+        content+='<label>'+xp_html.escape(q['reception'])+'</label>'+star_scale('reception')
+    content+='<label>'+(xp_html.escape(q['overall']) if pet else '1. ¿Cómo calificarías la atención recibida?')+'</label>'+star_scale('overall',['1 ★','2 ★','3 ★','4 ★','5 ★'])''',1)
+part=part.replace("content+='<label>2. ¿Qué te pareció la limpieza de nuestras instalaciones?</label>'","content+='<label>'+(xp_html.escape(q['cleanliness']) if pet else '2. ¿Qué te pareció la limpieza de nuestras instalaciones?')+'</label>'",1)
+part=part.replace("content+='<label>3. ¿La explicación sobre la atención de tu mascota fue clara?</label>'","content+='<label>'+(xp_html.escape(q['clarity']) if pet else '3. ¿La explicación sobre la atención de tu mascota fue clara?')+'</label>'",1)
+part=part.replace("content+='<label for=\"attendant\">4. ¿Quién te atendió? (opcional)</label>","content+='<label for=\"attendant\">'+(xp_html.escape(q['veterinarian']) if pet else '4. ¿Quién te atendió? (opcional)')+'</label>",1)
+part=part.replace("content+='<label for=\"comment\">5. ¿Quieres compartir algún comentario? (opcional)</label>","content+='<label for=\"comment\">'+(xp_html.escape(q['comment']) if pet else '5. ¿Quieres compartir algún comentario? (opcional)')+'</label>",1)
+part=part.replace("    questions=db.execute(",'''    if pet:
+        content+='<label>'+xp_html.escape(q['recommend'])+'</label><div class="xp-nps">'+''.join('<label><input type="radio" name="recommendation" value="'+str(i)+'" required><span>'+str(i)+'</span></label>' for i in range(11))+'</div><p class="muted">0 = Nada probable · 10 = Muy probable</p>'
+    questions=db.execute(''',1)
 # Ensure responsive 0-10 scale
 part=part.replace("    return xp_survey_page('Tu opinión',content)",'''    if pet:
         content='<style>.xp-nps{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.xp-nps label{min-width:0!important}.xp-nps span{padding:9px 2px!important}@media(min-width:720px){.xp-nps{grid-template-columns:repeat(11,minmax(0,1fr))}}</style>'+content
