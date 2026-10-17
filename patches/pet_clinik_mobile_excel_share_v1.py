@@ -38,5 +38,5 @@ if marker not in s:
 """
     part=part.replace(anchor,share_fix+anchor,1)
     s=s[:a]+part+s[b:]
-    p.write_text(s+'\\n'+marker+'\\n',encoding='utf-8')
+    p.write_text(s+'\n'+marker+'\n',encoding='utf-8')
 print('Mobile-first PET Clinik Excel export and share ready')
