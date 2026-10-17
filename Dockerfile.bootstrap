@@ -159,6 +159,7 @@ RUN python /bootstrap/patches/production_patch.py \
     && python /bootstrap/patches/surveys_pet_clinik_metrics_v1.py \
     && python /bootstrap/patches/surveys_pet_clinik_full_staff_responses_v1.py \
     && python /bootstrap/patches/pet_clinik_mobile_excel_share_v1.py \
+    && python /bootstrap/patches/pet_clinik_cooldown_brand_v1.py \
     && python /bootstrap/patches/connect_multiline_header_v1.py \
     && python /bootstrap/patches/connect_brand_material_v2.py \
     && python /bootstrap/patches/connect_share_preview_v1.py \
