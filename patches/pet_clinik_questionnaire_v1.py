@@ -30,7 +30,8 @@ def xp_pet_extra_init(db):
         CHECK (reception BETWEEN 1 AND 5),
         CHECK (recommendation BETWEEN 0 AND 10))"""))
 '''
-pos=s.index('def xp_survey_public(')
+route_marker='@app.get("/encuesta/{slug}"'
+pos=s.index(route_marker)
 s=s[:pos]+helper+'\n'+s[pos:]
 a=s.index('def xp_survey_public(');b=s.index('\n@app.',a);part=s[a:b]
 # Apply to current five-star mobile survey.
