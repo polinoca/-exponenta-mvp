@@ -7,6 +7,7 @@ marker='# XP PET CLINIK EXPERIENCE COPY V1'
 if marker not in s:
     # The public survey uses this phrase only as its visible headline.
     s=s.replace('¿Cómo fue tu visita?', 'Queremos conocer tu experiencia en Pet Clinik')
+    s=s.replace('¿Quieres compartir algún comentario?', '¿Hay algo que podamos mejorar o que quieras reconocer de nuestro servicio?')
     runtime=r'''
 # XP PET CLINIK EXPERIENCE COPY V1
 _xp_pet_questions_before_experience_copy = xp_pet_questions
