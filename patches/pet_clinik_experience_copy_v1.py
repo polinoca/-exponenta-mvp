@@ -16,8 +16,6 @@ def xp_pet_questions(db,slug):
         questions['comment']='¿Hay algo que podamos mejorar o que quieras reconocer de nuestro servicio?'
     return questions
 '''
-    p.write_text(s+'
-'+runtime+'
-',encoding='utf-8')
+    p.write_text(s+'\n'+runtime+'\n',encoding='utf-8')
 
 print('PET Clinik questionnaire heading and optional final question updated')
